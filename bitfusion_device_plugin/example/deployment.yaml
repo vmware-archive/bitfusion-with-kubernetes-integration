@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bf-deployment
+  namespace: injection
+  labels:
+    app: share-gpu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: share-gpu
+  template:
+    metadata:
+      annotations:
+        auto-management/bitfusion: "yes"
+      name: bf-pkgs
+      labels:
+        app: share-gpu
+    spec:
+      containers:
+        - image: nvcr.io/nvidia/tensorflow:19.07-py3
+          imagePullPolicy: IfNotPresent
+          name: bf-pkgs
+          command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+          resources:
+            limits:
+              bitfusion.io/gpu-num: 1
+              bitfusion.io/gpu-percent: 25
+          volumeMounts:
+            - name: code
+              mountPath: /benchmark
+      volumes:
+        - name: code
+          hostPath:
+            path: /home/vmware/benchmarks

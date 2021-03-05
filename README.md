@@ -1,0 +1,32 @@
+# Bitfusion with Kubernetes Integration
+
+This project is a collection of tools for Bitfusion to be used with Kubernetes.
+It contains Bitfusion device plugin for Kubernetes, Dockerfile templates for
+Bitfusion client, and shell scripts to accelerate the deployment.
+
+## Features
+* Bitfusion device plugin provides the interface for applications to request
+Bitfusion GPU resources via Kubernetes device plugin mechanism. Also, it could
+help to bake Bitfusion client image automatically.
+* Dockerfile templates show Bitfusion client docker image file samples, which
+could help to build customized Bitfusion application docker images.
+* Other. Scripts are provided to build Bitfusion execution environment
+automatically.
+
+## Usage
+* For device plugin, refer to [this page](./bitfusion_device_plugin/Readme.md)
+for more usage information
+* Dockerfile templaes are located in the directory ./Dockerfiles
+* nvidia-env.sh is used to setup Bitfusion client
+
+## Feedback
+Feel free to send us feedback by [filing an issue](https://github.com/vmware/bitfusion-with-kubernetes-integration/issues/new). Feature requests are always
+welcome. If you wish to contribute, please take a quick look at the next section.
+
+## How to Contribute
+* Clone this repository and create a new branch
+* Make changes and test
+* Submit Pull Request with comprehensive description of changes
+
+## License
+The project is licensed under the terms of the Apache 2.0 license.

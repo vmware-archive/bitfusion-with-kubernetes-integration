@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: bitfusion-cli-device-plugin
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      tier: node
+  template:
+    metadata:
+      labels:
+        tier: node
+    spec:
+      hostNetwork: true
+      containers:
+        - name: device-plugin-ctr
+          image: phaedobf/device-plugin:v0.1
+          securityContext:
+            privileged: true
+          env:
+            - name: SOCKET_NAME
+              value: "bitfusion.io"
+            - name: INTERVAL
+              value: "10"
+            - name: RESOURCE_NAME
+              value: "bitfusion.io/gpu"
+            - name: RESOURCE_NUMS
+              value: "1000"
+          volumeMounts:
+            - mountPath: "/var/lib/kubelet"
+              name: kubelet-socket
+            - mountPath: "/etc/kubernetes/pki"
+              name: pki
+      volumes:
+        - hostPath:
+            path: "/var/lib/kubelet"
+          name: kubelet-socket
+        - hostPath:
+            path: "/etc/kubernetes/pki"
+          name: pki

@@ -1,0 +1,95 @@
+# Copyright 2020 VMware, Inc.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+FROM ubuntu:16.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        apt-utils \
+        build-essential \
+        ca-certificates \
+        curl \
+        kmod
+
+#ARG BASE_URL=http://us.download.nvidia.com/XFree86/Linux-x86_64
+ARG BASE_URL=https://us.download.nvidia.com/tesla
+ARG DRIVER_VERSION=418.87.01
+ARG SHORT_DRIVER_VERSION=418.87
+ENV DRIVER_VERSION=$DRIVER_VERSION
+
+# Install the userspace components and copy the kernel module sources.
+RUN cd /tmp && \
+    curl -fSslL -O $BASE_URL/$SHORT_DRIVER_VERSION/NVIDIA-Linux-x86_64-$DRIVER_VERSION.run && \
+    sh NVIDIA-Linux-x86_64-$DRIVER_VERSION.run -x && \
+    cd NVIDIA-Linux-x86_64-$DRIVER_VERSION* && \
+    ./nvidia-installer --silent \
+                       --no-kernel-module \
+                       --install-compat32-libs \
+                       --no-nouveau-check \
+                       --no-nvidia-modprobe \
+                       --no-rpms \
+                       --no-backup \
+                       --no-check-for-alternate-installs \
+                       --no-libglx-indirect \
+                       --no-install-libglvnd \
+                       --x-prefix=/tmp/null \
+                       --x-module-path=/tmp/null \
+                       --x-library-path=/tmp/null \
+                       --x-sysconfig-path=/tmp/null \
+                       --no-glvnd-egl-client \
+                       --no-glvnd-glx-client && \
+    rm -rf /tmp/*
+
+# Start of CUDA base
+RUN apt-get install -y --no-install-recommends \
+        apt-transport-https gnupg-curl && \
+    NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
+    NVIDIA_GPGKEY_FPR=ae09fe4bbd223a84b2ccfce3f60f4b3d7fa2af80 && \
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub && \
+    apt-key adv --export --no-emit-version -a $NVIDIA_GPGKEY_FPR | tail -n +5 > cudasign.pub && \
+    echo "$NVIDIA_GPGKEY_SUM  cudasign.pub" | sha256sum -c --strict - && rm cudasign.pub && \
+    echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list && \
+    echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV CUDA_VERSION 10.0.130
+ENV CUDA_PKG_VERSION 10-0=$CUDA_VERSION-1
+
+# For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        cuda-cudart-$CUDA_PKG_VERSION \
+        cuda-compat-10-0 && \
+    ln -s cuda-10.0 /usr/local/cuda
+
+ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
+
+# Start of CUDA runtime
+ENV NCCL_VERSION 2.5.6
+
+RUN apt-get install -y --no-install-recommends \
+        cuda-libraries-$CUDA_PKG_VERSION \
+        cuda-nvtx-$CUDA_PKG_VERSION \
+        libnccl2=$NCCL_VERSION-1+cuda10.0 && \
+    apt-mark hold libnccl2
+
+# Start of CUDA cudnn
+ENV CUDNN_VERSION 7.6.5.32
+LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
+
+RUN apt-get install -y --no-install-recommends \
+        libcudnn7=$CUDNN_VERSION-1+cuda10.0 && \
+    apt-mark hold libcudnn7
+
+# Start of bitfusion
+RUN apt-get install -y --no-install-recommends \
+        wget uuid libjson-c2 libjsoncpp1 librdmacm1 libssl-dev libibverbs1 libnuma1 libcapstone3 libnl-3-200 libnl-route-3-200 open-vm-tools && \
+    rm -rf /var/lib/apt/lists/*
+
+# TODO: Make this work with Bitfusion GA version
+RUN cd /tmp && \
+    curl -fSslL -O https://packages.vmware.com/bitfusion/ubuntu/16.04/bitfusion-client-ubuntu1604_2.0.2-4_amd64.deb && \
+    apt-get install -y ./bitfusion-client-ubuntu1604_2.0.2-4_amd64.deb && \
+    bitfusion list_gpus && \
+    rm -rf /tmp/*
+
