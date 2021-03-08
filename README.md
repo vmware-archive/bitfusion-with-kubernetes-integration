@@ -24,6 +24,11 @@ Feel free to send us feedback by [filing an issue](https://github.com/vmware/bit
 welcome. If you wish to contribute, please take a quick look at the next section.
 
 ## How to Contribute
+This project team welcomes contributions from the community. If you wish to
+contribute code and you have not signed our contributor license agreement (CLA),
+our bot will update the issue when you open a Pull Request. For any questions
+about the CLA process, please refer to our [FAQ](https://cla.vmware.com/faq).
+
 * Clone this repository and create a new branch
 * Make changes and test
 * Submit Pull Request with comprehensive description of changes
