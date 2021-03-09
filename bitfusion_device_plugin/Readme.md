@@ -25,12 +25,12 @@ However, out of the box Kubernetes does not offer a way to consume Bitfusion's n
 
 To address these problems, we create this project to allow Bitfusion to work with Kubernetes.
 
-![img](./roadmap.png)
 
 
 
 ## Architecture
 
+![img](./architecture.png)
 Bitfusion on Kubernetes consists of the following two components.<br/>
  1.bitfusion-device-plugin<br/>
  2.kubernetes mutating webhook
