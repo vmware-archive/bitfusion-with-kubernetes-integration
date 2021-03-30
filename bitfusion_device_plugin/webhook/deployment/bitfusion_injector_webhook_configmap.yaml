@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bwki-webhook-configmap
+  namespace: bwki
+data:
+  sidecarconfig.yaml: |
+    initContainers:
+    - name: populate
+      image: phaedobf/bitfusion-client-ubuntu1804_2.5.0-10_amd64:v0.1
+      command: [/bin/bash, -c, "
+            cp /usr/bin/bitfusion /bitfusion-usr-bin &&
+            cp -a /var/lib/bitfusion /bitfusion-var-lib &&
+            cp -a /var/run/bitfusion /bitfusion-var-run &&
+            cp -a /etc/security /etc-security &&
+            cp -a /usr/share/bitfusion/  /bitfusion-usr-share &&
+            cp -a /usr/lib/x86_64-linux-gnu/ /x86-usr-lib &&
+            cp -a /lib/x86_64-linux-gnu/  /x86-lib &&
+            cp -a /lib/x86_64-linux-gnu/  /x86-lib-sys &&
+            cp -a /opt/bitfusion/ /opt-bitfusion &&
+            cp /root/.bitfusion/client.yaml /client
+            "]
+      volumeMounts:
+      - name: bitfusion-usr-bin
+        mountPath: /bitfusion-usr-bin
+      - name: bitfusion-var-lib
+        mountPath: /bitfusion-var-lib
+      - name: bitfusion-var-run
+        mountPath: /bitfusion-var-run
+      - name: bitfusion-usr-share
+        mountPath: /bitfusion-usr-share
+      - name: x86-usr-lib
+        mountPath: /x86-usr-lib
+      - name: x86-lib
+        mountPath: /x86-lib
+      - name: x86-lib-sys
+        mountPath: /x86-lib-sys
+      - name: usr-local
+        mountPath: /usr-local
+      - name: opt-bitfusion
+        mountPath: /opt-bitfusion
+      - name: client-dir
+        mountPath: /client
+      - name: client
+        mountPath: /root/.bitfusion/client.yaml
+        subPath: client.yaml
+    containers:
+    - name: sidecar-container
+      image: container
+      env:
+      - name: LD_LIBRARY_PATH
+        value: "/bitfusion/usr/lib/x86_64-linux-gnu/:/bitfusion/usr/local/lib/:/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/:/usr/share/bitfusion/:/bitfusion/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"
+      volumeMounts:
+      - name: ca
+        mountPath: /etc/bitfusion
+      - name: client-dir
+        mountPath: /root/.bitfusion/client.yaml
+        subPath: client.yaml
+      - name: servers
+        mountPath: /root/.bitfusion/servers.conf
+        subPath: servers.conf
+      - name: bitfusion-usr-bin
+        mountPath: /usr/bin/bitfusion
+        subPath: bitfusion
+      - name: bitfusion-var-lib
+        mountPath: /var/lib
+      - name: bitfusion-var-run
+        mountPath: /var/run
+      - name: bitfusion-usr-share
+        mountPath: /usr/share/
+      - name: x86-usr-lib
+        mountPath: /bitfusion/usr/lib/
+      - name: x86-lib
+        mountPath: /bitfusion/lib/
+      - name: x86-lib-sys
+        mountPath: /bitfusion/systemlib/
+      - name: usr-local
+        mountPath: /bitfusion/usr/local/lib/
+      - name: opt-bitfusion
+        mountPath: /opt/
+    volumes:
+    - name: bitfusion-usr-bin
+      emptyDir: {}
+    - name: bitfusion-var-lib
+      emptyDir: {}
+    - name: bitfusion-var-run
+      emptyDir: {}
+    - name: bitfusion-usr-share
+      emptyDir: {}
+    - name: x86-usr-lib
+      emptyDir: {}
+    - name: x86-lib
+      emptyDir: {}
+    - name: x86-lib-sys
+      emptyDir: {}
+    - name: usr-local
+      emptyDir: {}
+    - name: opt-bitfusion
+      emptyDir: {}
+    - name: client-dir
+      emptyDir: {}
+    - name: ca
+      secret:
+        secretName: bitfusion-secret
+        items:
+          - key: ca.crt
+            path: tls/ca.crt
+    - name: client
+      secret:
+        secretName: bitfusion-secret
+        items:
+          - key: client.yaml
+            path: client.yaml
+            mode: 0600
+    - name: servers
+      secret:
+        secretName: bitfusion-secret
+        items:
+          - key: servers.conf
+            path: servers.conf
