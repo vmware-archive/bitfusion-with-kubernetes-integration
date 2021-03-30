@@ -1,8 +1,6 @@
 Bitfusion with Kubernetes Integration
 Copyright 2020 VMware, Inc.
 
-NOTE:  The terms of the Apache License, version 2.0 Section 3 “Grant of Patent License” do not apply to the binaries in the BitFusion Client directory which are not licensed under the Apache License, version 2.0.
-
 The Apache 2.0 license (the "License") set forth below applies to all parts of the Bitfusion with Kubernetes Integration project. You may not use this file except in compliance with the License.
 
 Apache License 
