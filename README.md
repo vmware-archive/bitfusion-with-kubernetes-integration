@@ -36,5 +36,5 @@ about the CLA process, please refer to our [FAQ](https://cla.vmware.com/faq).
 * Submit Pull Request with comprehensive description of changes
 
 ## License
-The project is licensed under the terms of the Apache 2.0 license.
+The project is licensed under the terms of the Apache 2.0 license.<br/>
 The terms of the Apache License, version 2.0 Section 3 “Grant of Patent License” do not apply to the binaries in the BitFusion Client directory which are not licensed under the Apache License, version 2.0.”
