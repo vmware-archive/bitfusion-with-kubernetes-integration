@@ -11,12 +11,15 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
-	"io/ioutil"
 	"k8s.io/api/admission/v1beta1"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
-	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -25,9 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 var (
@@ -35,7 +35,6 @@ var (
 	codecs        = serializer.NewCodecFactory(runtimeScheme)
 	deserializer  = codecs.UniversalDeserializer()
 
-	// (https://github.com/kubernetes/kubernetes/issues/57982)
 	defaulter    = runtime.ObjectDefaulter(runtimeScheme)
 	zeroQuantity = resource.Quantity{}
 )
@@ -53,7 +52,6 @@ const (
 	bitFusionGPUResourceNum           = "bitfusion.io/gpu-num"
 	bitFusionGPUResourceMemory        = "bitfusion.io/gpu-memory"
 	bitFusionGPUResourcePartial       = "bitfusion.io/gpu-percent"
-	bitFusionGPUResourceEscape        = "bitfusion.io~1gpu"
 	bitFusionGPUResourceNumEscape     = "bitfusion.io~1gpu-num"
 	bitFusionGPUResourcePartialEscape = "bitfusion.io~1gpu-percent"
 	bitFusionGPUResourceMemoryEscape  = "bitfusion.io~1gpu-memory"
@@ -78,6 +76,7 @@ type Config struct {
 	Volumes        []corev1.Volume    `yaml:"volumes"`
 }
 
+// Update field(s) of a resource using strategic merge patch.
 type patchOperation struct {
 	Op    string      `json:"op"`
 	Path  string      `json:"path"`
@@ -87,12 +86,9 @@ type patchOperation struct {
 func init() {
 	_ = corev1.AddToScheme(runtimeScheme)
 	_ = admissionregistrationv1beta1.AddToScheme(runtimeScheme)
-	// defaulting with webhooks:
-	// https://github.com/kubernetes/kubernetes/issues/57982
-	_ = v1.AddToScheme(runtimeScheme)
+	_ = corev1.AddToScheme(runtimeScheme)
 }
 
-// (https://github.com/kubernetes/kubernetes/issues/57982)
 func applyDefaultsWorkaround(containers []corev1.Container, volumes []corev1.Volume) {
 	defaulter.Default(&corev1.Pod{
 		Spec: corev1.PodSpec{
@@ -117,9 +113,9 @@ func LoadConfig(configFile string) (*Config, error) {
 	return &cfg, nil
 }
 
-// Check whether the target resoured need to be mutated
+// mutationRequired checks whether the target resource need to be mutated
 func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
-	// skip special kubernete system namespaces
+	// Skip special kubernetes system namespaces
 	for _, namespace := range ignoredList {
 		if metadata.Namespace == namespace {
 			glog.Infof("Skip mutation for %v for it's in special namespace:%v", metadata.Name, metadata.Namespace)
@@ -134,7 +130,7 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 
 	status := annotations[admissionWebhookAnnotationStatusKey]
 
-	// determine whether to perform mutation based on annotation for the target resource
+	// Determine whether to perform mutation based on annotation for the target resource
 	var required bool
 	if strings.ToLower(status) == "injected" {
 		required = false
@@ -147,10 +143,11 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 		}
 	}
 
-	glog.Infof("Mutation policy for %v/%v: status: %q required:%v", metadata.Namespace, metadata.Name, status, required)
+	glog.Infof("Mutation policy for %v/%v: status: %q required:%v ", metadata.Namespace, metadata.Name, status, required)
 	return required
 }
 
+// addContainer adds container to pod
 func addContainer(target, added []corev1.Container, basePath string) (patch []patchOperation) {
 	first := len(target) == 0
 
@@ -173,6 +170,7 @@ func addContainer(target, added []corev1.Container, basePath string) (patch []pa
 	return patch
 }
 
+// updateBFResource updates resource name and change container's cmd to add Bitfusion
 func updateBFResource(targets []corev1.Container, basePath string) (patches []patchOperation, e error) {
 	if len(targets) == 0 {
 		return patches, nil
@@ -181,10 +179,10 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 	for i, target := range targets {
 		if len(target.Command) != 0 {
 
-			// 1. Check bitFusionGPUResourceNum
+			// Check bitFusionGPUResourceNum
 			gpuNum := target.Resources.Requests[bitFusionGPUResourceNum]
 
-			// 2. Check bitFusionGPUResourcePartial and set fallback
+			// Check bitFusionGPUResourcePartial and set fallback
 			gpuPartial := target.Resources.Requests[bitFusionGPUResourcePartial]
 			gpuMemory := target.Resources.Requests[bitFusionGPUResourceMemory]
 			if gpuNum != zeroQuantity && gpuPartial == zeroQuantity {
@@ -204,17 +202,17 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 					Path: basePath + "/" + strconv.Itoa(i) + "/resources/requests/" + bitFusionGPUResourcePartialEscape,
 				})
 			} else if gpuNum == zeroQuantity && gpuPartial == zeroQuantity {
-				// no patch for this container
+				// No patch for this container
 				continue
 			} else {
-				return patches, fmt.Errorf("No gpu num was provided but found percent")
+				return patches, fmt.Errorf("No gpu num was provided but found percent ")
 			}
 
 			gpuPartialNum := gpuPartial.Value()
 
 			// Also return error if exceed 100% or equals 0%
 			if gpuPartialNum > 100 || gpuPartialNum == 0 {
-				return patches, fmt.Errorf("Invalid %s quantity: %d", bitFusionGPUResourcePartial, gpuPartialNum)
+				return patches, fmt.Errorf("Invalid %s quantity: %d ", bitFusionGPUResourcePartial, gpuPartialNum)
 			}
 			var command string
 			if gpuMemory != zeroQuantity {
@@ -234,9 +232,9 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			} else {
 				command = fmt.Sprintf("bitfusion run -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
 			}
-			glog.Infof("request gpu with num %v", gpuNum.String())
-			glog.Infof("request gpu with partial %v", gpuPartial.String())
-			// /bin/bash -c bitfusion run -n xxx -p xxx python xxx
+			glog.Infof("Request gpu with num %v", gpuNum.String())
+			glog.Infof("Request gpu with partial %v", gpuPartial.String())
+
 			hasPrefix := false
 			for _, v := range target.Command {
 
@@ -265,17 +263,17 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 				})
 			}
 
-			// 4. Construct bitFusionGPUResource
-			// remove legacy
+			// Construct bitFusionGPUResource
+			// Remove legacy
 			delete(target.Resources.Requests, bitFusionGPUResourceNum)
 			delete(target.Resources.Requests, bitFusionGPUResourcePartial)
 
-			// construct quantity
+			// Construct quantity
 			gpuQuantity := &resource.Quantity{}
 			gpuQuantity.Set(gpuPartialNum * gpuNum.Value())
 			target.Resources.Requests[bitFusionGPUResource] = *gpuQuantity
 
-			// 5. Create JSON patch to target containers
+			// Create JSON patch to target containers
 			targets[i] = target
 
 			patches = append(patches, patchOperation{
@@ -288,7 +286,6 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			patches = append(patches, patchOperation{
 				Op:   "add",
 				Path: basePath + "/" + strconv.Itoa(i) + "/resources",
-				//Value: fmt.Sprintf("{\"limits\": {\"%s\": %s}}", bitFusionGPUResource, gpuQuantity.String()),
 				Value: map[string]map[string]resource.Quantity{
 					"limits": {
 						bitFusionGPUResource: *gpuQuantity,
@@ -300,12 +297,13 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 	return patches, nil
 }
 
+// updateContainer updates env and volume to container
 func updateContainer(targets, source []corev1.Container, basePath string) (patches []patchOperation) {
 
 	for i, container := range targets {
 		if container.Resources.Requests[bitFusionGPUResourceNum] == zeroQuantity {
-			// pass if no bitfusion resouce was required
-			// it will fail on next step if only gpu-percent was provided
+			// Pass if no Bitfusion resource was required
+			// It will fail on next step if only gpu-percent was provided
 			continue
 		}
 
@@ -329,6 +327,7 @@ func updateContainer(targets, source []corev1.Container, basePath string) (patch
 	return patches
 }
 
+// addVolume adds volume to pod
 func addVolume(target, added []corev1.Volume, basePath string) (patch []patchOperation) {
 	first := len(target) == 0
 	var value interface{}
@@ -350,6 +349,7 @@ func addVolume(target, added []corev1.Volume, basePath string) (patch []patchOpe
 	return patch
 }
 
+// updateAnnotation updates pod's annotation, returns a update list of patchOperation
 func updateAnnotation(target map[string]string, added map[string]string) (patch []patchOperation) {
 	for key, value := range added {
 		if target == nil || target[key] == "" {
@@ -372,19 +372,17 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 	return patch
 }
 
-// create mutation patch for resource
+// createPatch creates mutation patch for resource
 func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]string) ([]byte, error) {
 	var patch []patchOperation
 
 	var err error
 
-	// TODO: should extract the for loop here to avoid redundence.
 	patch = append(patch, addContainer(pod.Spec.InitContainers, sidecarConfig.InitContainers, "/spec/initContainers")...)
 	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
 	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
 	patch = append(patch, updateContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers")...)
 
-	// TODO: return the earliest error
 	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers")
 	if err != nil {
 		glog.Errorf("Unable to create json patch for bitfusion resource")
@@ -401,7 +399,7 @@ func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]
 	return patchByte, nil
 }
 
-// main mutation process
+// mutate is main mutation process
 func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
 	var pod corev1.Pod
@@ -417,7 +415,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v (%v) UID=%v patchOperation=%v UserInfo=%v",
 		req.Kind, req.Namespace, req.Name, pod.Name, req.UID, req.Operation, req.UserInfo)
 
-	// determine whether to perform mutation
+	// Determine whether to perform mutation
 	if !mutationRequired(ignoredNamespaces, &pod.ObjectMeta) {
 		glog.Infof("Skipping mutation for %s/%s due to policy check", pod.Namespace, pod.Name)
 		return &v1beta1.AdmissionResponse{
@@ -425,7 +423,6 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		}
 	}
 
-	// Workaround: https://github.com/kubernetes/kubernetes/issues/57982
 	applyDefaultsWorkaround(whsvr.SidecarConfig.Containers, whsvr.SidecarConfig.Volumes)
 	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
 	patchBytes, err := createPatch(&pod, whsvr.SidecarConfig, annotations)
@@ -465,12 +462,12 @@ func (whsvr *WebhookServer) Serve(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if len(body) == 0 {
-		glog.Error("empty body")
-		http.Error(w, "empty body", http.StatusBadRequest)
+		glog.Error("Empty body")
+		http.Error(w, "Empty body", http.StatusBadRequest)
 		return
 	}
 
-	// verify the content type is accurate
+	// Verify the content type is accurate
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
 		glog.Errorf("Content-Type=%s, expect application/json", contentType)
@@ -511,6 +508,7 @@ func (whsvr *WebhookServer) Serve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// CopySecret copies a secret to target namespace
 func CopySecret(namespace *string) error {
 	name := "bitfusion-secret"
 	config, err := rest.InClusterConfig()
@@ -530,7 +528,7 @@ func CopySecret(namespace *string) error {
 		if err != nil {
 			return err
 		}
-		newSecret := &v1.Secret{
+		newSecret := &corev1.Secret{
 			Data: secret.Data,
 			Type: secret.Type,
 			ObjectMeta: metav1.ObjectMeta{
@@ -538,17 +536,12 @@ func CopySecret(namespace *string) error {
 				Namespace: *namespace,
 			},
 		}
-		// create the secret
+		// Create the secret
 		_, err = clientset.CoreV1().Secrets(*namespace).Create(context.TODO(), newSecret, metav1.CreateOptions{})
 
 		if err != nil {
 			glog.Errorf("Can't create secret: %v", err)
-			return err
 		}
-
 	}
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }

@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: bf-job
-  namespace: injection
+  namespace: tensorflow-benchmark
 spec:
   template:
     metadata:
@@ -26,4 +26,4 @@ spec:
       volumes:
         - name: code
           hostPath:
-            path: /home/vmware/benchmarks
+            path: /home/benchmarks

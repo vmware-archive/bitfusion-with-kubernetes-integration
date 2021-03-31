@@ -10,10 +10,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/golang/glog"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 	"net"
 	"os"
 	"os/exec"
@@ -21,6 +17,11 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/golang/glog"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
 var socketName string
@@ -28,6 +29,7 @@ var resourceName string
 var interval time.Duration
 var resourceNums string
 
+// Register the device plugin
 func Register(kubeletEndpoint, pluginEndpoint, resourceName string) error {
 	conn, err := grpc.Dial(kubeletEndpoint, grpc.WithInsecure(),
 		grpc.WithDialer(func(addr string, timeout time.Duration) (net.Conn, error) {
@@ -35,7 +37,7 @@ func Register(kubeletEndpoint, pluginEndpoint, resourceName string) error {
 		}))
 	defer conn.Close()
 	if err != nil {
-		return fmt.Errorf("device-plugin: cannot connect to kubelet service: %v", err)
+		return fmt.Errorf("can't connect to kubelet service: %v ", err)
 	}
 	client := pluginapi.NewRegistrationClient(conn)
 	reqt := &pluginapi.RegisterRequest{
@@ -44,11 +46,9 @@ func Register(kubeletEndpoint, pluginEndpoint, resourceName string) error {
 		ResourceName: resourceName,
 	}
 
-	glog.Infof("reqt ==== %s", reqt)
-
 	_, err = client.Register(context.Background(), reqt)
 	if err != nil {
-		return fmt.Errorf("device-plugin: cannot register to kubelet service: %v", err)
+		return fmt.Errorf("can't register to kubelet service: %v ", err)
 	}
 	return nil
 }
@@ -71,32 +71,37 @@ func ExecCommand(cmdName string, arg ...string) (bytes.Buffer, error) {
 func main() {
 	flag.Parse()
 	glog.Info("Starting main \n")
-	glog.Infof("---------  %s", os.Args)
+	glog.Infof("Args: %s ", os.Args)
 	intervalTemp, _ := strconv.ParseInt(os.Args[1], 10, 64)
 	interval = time.Duration(intervalTemp)
-	socketName = os.Args[2] //"bfs"
+	socketName = os.Args[2]
 	resourceName = os.Args[3]
 	resourceNums = os.Args[4]
 
-	flag.Lookup("logtostderr").Value.Set("true")
+	err := flag.Lookup("logtostderr").Value.Set("true")
+
+	if err != nil {
+		glog.Error(err)
+	}
 
 	bfs, err := NewbfsManager()
 	if err != nil {
-		glog.Error(err)
-		os.Exit(1)
+		glog.Fatal(err)
 	}
 
-	//pluginEndpoint := fmt.Sprintf("%s-%d.sock", socketName, time.Now().Unix())
 	pluginEndpoint := socketName
-	_, _ = ExecCommand("rm", "-rf", path.Join(pluginapi.DevicePluginPath, pluginEndpoint))
-	//serverStarted := make(chan bool)
+	_, err = ExecCommand("rm", "-rf", path.Join(pluginapi.DevicePluginPath, pluginEndpoint))
+	if err != nil {
+		glog.Fatal(err)
+	}
 	var wg sync.WaitGroup
 	wg.Add(1)
+	ch := make(chan int)
 	// Starts device plugin service.
 	go func() {
 		defer wg.Done()
-		glog.Infof("DevicePluginPath %s, pluginEndpoint %s\n", pluginapi.DevicePluginPath, pluginEndpoint)
-		glog.Infof("device-plugin start server at: %s\n", path.Join(pluginapi.DevicePluginPath, pluginEndpoint))
+		glog.Infof("Device Plugin path %s, plugin endpoint %s\n", pluginapi.DevicePluginPath, pluginEndpoint)
+		glog.Infof("Device Plugin start server at: %s\n", path.Join(pluginapi.DevicePluginPath, pluginEndpoint))
 		lis, err := net.Listen("unix", path.Join(pluginapi.DevicePluginPath, pluginEndpoint))
 		if err != nil {
 			glog.Fatal(err)
@@ -104,15 +109,17 @@ func main() {
 		}
 		grpcServer := grpc.NewServer()
 		pluginapi.RegisterDevicePluginServer(grpcServer, bfs)
-		grpcServer.Serve(lis)
+		close(ch)
+		if err := grpcServer.Serve(lis); err != nil {
+			glog.Fatal(err)
+		}
 	}()
-
-	time.Sleep(35 * time.Second)
-	// Registers with Kubelet.
+	<-ch
+	// Register to Kubelet.
 	err = Register(pluginapi.KubeletSocket, pluginEndpoint, resourceName)
 	if err != nil {
 		glog.Fatal(err)
 	}
-	glog.Info("device-plugin registered\n")
+	glog.Info("Device Plugin registered\n")
 	wg.Wait()
 }
