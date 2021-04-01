@@ -4,7 +4,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "yes"
   name: bf-pkgs
-  namespace: injection
+  namespace: tensorflow-benchmark
 spec:
   containers:
     - image: nvcr.io/nvidia/tensorflow:19.07-py3
@@ -21,4 +21,4 @@ spec:
   volumes:
     - name: code
       hostPath:
-        path: /home/vmware/benchmarks
+        path: /home/benchmarks
