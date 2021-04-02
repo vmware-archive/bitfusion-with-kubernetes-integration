@@ -24,7 +24,7 @@ import (
 func main() {
 	var parameters mutatingWebhook.WhSvrParameters
 
-	// get command line parameters
+	// Get command line parameters
 	flag.IntVar(&parameters.Port, "port", 8443, "Webhook server port.")
 	flag.StringVar(&parameters.CertFile, "tlsCertFile", "/etc/webhook/certs/cert.pem", "File containing the x509 Certificate for HTTPS.")
 	flag.StringVar(&parameters.KeyFile, "tlsKeyFile", "/etc/webhook/certs/key.pem", "File containing the x509 private key to --tlsCertFile.")
@@ -57,25 +57,28 @@ func main() {
 		},
 	}
 
-	// define http server and server handler
+	// Define http server and server handler
 	mux := http.NewServeMux()
 	mux.HandleFunc("/mutate", mutatingWebhookSv.Serve)
 	glog.Infof("HandleFunc validate")
 	mux.HandleFunc("/validate", validateWebhookSv.Serve)
 	mutatingWebhookSv.Server.Handler = mux
 
-	// start webhook server in new rountine
+	// Start webhook server in new rountine
 	go func() {
 		if err := mutatingWebhookSv.Server.ListenAndServeTLS("", ""); err != nil {
 			glog.Errorf("Failed to listen and serve webhook server: %v", err)
 		}
 	}()
 
-	// listening OS shutdown singal
+	// Listening OS shutdown singal
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	<-signalChan
 
 	glog.Infof("Got OS shutdown signal, shutting down webhook server gracefully...")
-	mutatingWebhookSv.Server.Shutdown(context.Background())
+	err = mutatingWebhookSv.Server.Shutdown(context.Background())
+	if err != nil {
+		glog.Fatal(err)
+	}
 }
