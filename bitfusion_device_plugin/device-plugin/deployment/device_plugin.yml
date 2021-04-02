@@ -14,7 +14,7 @@ spec:
     spec:
       hostNetwork: true
       containers:
-        - name: device-plugin-ctr
+        - name: bitfusion-device-plugin
           image: phaedobf/device-plugin:v0.1
           securityContext:
             privileged: true

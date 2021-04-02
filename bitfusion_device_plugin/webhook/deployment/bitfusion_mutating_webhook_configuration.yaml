@@ -1,0 +1,23 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: bwki-webhook-cfg
+  labels:
+    app: vmware-injector
+webhooks:
+- name: bwkimua.bitfusion.io
+  clientConfig:
+    service:
+      name: bwki-webhook-svc
+      namespace: bwki
+      path: "/mutate"
+    caBundle: ${CA_BUNDLE}
+  rules:
+  - operations: ["CREATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+
+
+
+

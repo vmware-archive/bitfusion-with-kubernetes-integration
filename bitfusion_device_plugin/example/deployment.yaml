@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bf-deployment
-  namespace: injection
+  namespace: tensorflow-benchmark
   labels:
     app: share-gpu
 spec:
@@ -33,4 +33,4 @@ spec:
       volumes:
         - name: code
           hostPath:
-            path: /home/vmware/benchmarks
+            path: /home/benchmarks
