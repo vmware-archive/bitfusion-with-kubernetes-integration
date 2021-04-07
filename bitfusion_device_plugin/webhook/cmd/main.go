@@ -11,8 +11,9 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+
 	"github.com/golang/glog"
-	"github.com/vmware/bitfusion-device-plugin/pkg/validation-webhook"
+	"github.com/vmware/bitfusion-device-plugin/pkg/validationwebhook"
 	mutatingWebhook "github.com/vmware/bitfusion-device-plugin/pkg/webhook"
 
 	"net/http"
@@ -50,7 +51,7 @@ func main() {
 		},
 	}
 
-	validateWebhookSv := &validation_webhook.ValidateWebhookServer{
+	validateWebhookSv := &validationwebhook.ValidateWebhookServer{
 		Server: &http.Server{
 			Addr:      fmt.Sprintf(":%v", parameters.Port),
 			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},

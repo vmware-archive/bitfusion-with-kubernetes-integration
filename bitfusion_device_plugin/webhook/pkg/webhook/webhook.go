@@ -57,6 +57,7 @@ const (
 	bitFusionGPUResourceMemoryEscape  = "bitfusion.io~1gpu-memory"
 )
 
+// WebhookServer struct
 type WebhookServer struct {
 	SidecarConfig *Config
 	Server        *http.Server
@@ -70,13 +71,14 @@ type WhSvrParameters struct {
 	SidecarCfgFile string // path to sidecar injector configuration file
 }
 
+// Config struct
 type Config struct {
 	InitContainers []corev1.Container `yaml:"initContainers"`
 	Containers     []corev1.Container `yaml:"containers"`
 	Volumes        []corev1.Volume    `yaml:"volumes"`
 }
 
-// Update field(s) of a resource using strategic merge patch.
+// patchOperation Update field(s) of a resource using strategic merge patch.
 type patchOperation struct {
 	Op    string      `json:"op"`
 	Path  string      `json:"path"`

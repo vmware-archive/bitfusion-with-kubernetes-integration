@@ -1,4 +1,4 @@
-module bitfusion-device-plugin
+module github.com/vmware/bitfusion-device-plugin
 
 go 1.14
 
