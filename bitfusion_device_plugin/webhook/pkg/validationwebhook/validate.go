@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package validation_webhook
+package validationwebhook
 
 import (
 	"encoding/json"
@@ -29,6 +29,7 @@ const (
 	admissionWebhookAnnotationStatusKey = "auto-management/status"
 )
 
+// ValidateWebhookServer
 type ValidateWebhookServer struct {
 	Server *http.Server
 }
