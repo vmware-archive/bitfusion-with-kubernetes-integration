@@ -15,7 +15,7 @@ This project is a collection of tools for Bitfusion to be used with Kubernetes a
 ## Usage
 
 - For device plugin, refer to [this page](./bitfusion_device_plugin/Readme.md) for more usage information.
-- Dockerfile templaes are located in the directory [./Dockerfiles](./Dockerfiles) to set up a Bitfusion client based on different OS automatically. After deployment, you could run `bitfusion smi` command to check remote GPU resource of Bitfusion server connected to this Bitfusion client.
+- Dockerfile templates are located in the directory [./Dockerfiles](./Dockerfiles) to set up a Bitfusion client based on different OS automatically. After deployment, you could run `bitfusion smi` command to check remote GPU resource of Bitfusion server connected to this Bitfusion client.
 - [nvidia-env.sh](./nvidia-env.sh) is a shell script to install needed various dependencies of Bitfusion client.
 
 ## Feedback
