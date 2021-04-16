@@ -359,4 +359,3 @@ $ kubectl delete secret -n kube-system bitfusion-secret
 $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret  
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```  
-
