@@ -50,7 +50,6 @@ func (bfs *bfsManager) ListAndWatch(emtpy *pluginapi.Empty, stream pluginapi.Dev
 		bfs.discoverResources()
 		resp := new(pluginapi.ListAndWatchResponse)
 		for _, dev := range bfs.devices {
-			glog.Info("Dev ", dev)
 			resp.Devices = append(resp.Devices, dev)
 		}
 		glog.Info("Resp Devices ", resp.Devices)

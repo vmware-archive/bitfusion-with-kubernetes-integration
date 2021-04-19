@@ -76,6 +76,7 @@ update:
 
 create: update
 	@echo "Create device-plugin ..."
-	@kubectl apply -f $(DEVICE_PLUGIN_YAML_TO_DEPLOY)
+	@kubectl delete -f $(DEVICE_PLUGIN_YAML_TO_DEPLOY)
+	@kubectl create -f $(DEVICE_PLUGIN_YAML_TO_DEPLOY)
 	@echo "Create webhook ..."
 	@bash webhook/deploy.sh
