@@ -50,10 +50,8 @@ func (bfs *bfsManager) ListAndWatch(emtpy *pluginapi.Empty, stream pluginapi.Dev
 		bfs.discoverResources()
 		resp := new(pluginapi.ListAndWatchResponse)
 		for _, dev := range bfs.devices {
-			glog.Info("Dev ", dev)
 			resp.Devices = append(resp.Devices, dev)
 		}
-		glog.Info("Resp Devices ", resp.Devices)
 		if err := stream.Send(resp); err != nil {
 			glog.Errorf("Failed to send response to kubelet: %v\n", err)
 		}
