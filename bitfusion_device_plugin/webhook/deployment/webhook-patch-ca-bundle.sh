@@ -12,6 +12,11 @@ fi
 
 export CA_BUNDLE
 
+if [ "${K8S_PLATFORM}"=="tkgi" ]; then
+    echo "CA_BUNDLE from local file ca.pem"
+    CA_BUNDLE=$(cat ca.pem | base64)
+fi
+
 if command -v envsubst >/dev/null 2>&1; then
     envsubst
 else

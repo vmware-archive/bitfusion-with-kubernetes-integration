@@ -25,12 +25,20 @@ cp -r $CRTDIR/deployment $CRTDIR/deploy
 # Add permissions
 chmod 777  $CRTDIR//deploy/webhook-create-signed-cert.sh
 chmod 777  $CRTDIR//deploy/webhook-patch-ca-bundle.sh
+chmod 777  $CRTDIR//deploy/webhook-create-ca.sh
 
 # Create signed cert
-$CRTDIR/deploy/webhook-create-signed-cert.sh \
-    --service bwki-webhook-svc \
-    --secret bwki-webhook-certs \
-    --namespace "${WEBHOOK_NAMESPACE}"
+echo "K8S_PLATFORM == ${K8S_PLATFORM}"
+
+if [ "${K8S_PLATFORM}"=="tkgi" ]; then
+    echo "Run webhook-create-ca.sh"
+    $CRTDIR/deploy/webhook-create-ca.sh
+else
+    $CRTDIR/deploy/webhook-create-signed-cert.sh \
+        --service bwki-webhook-svc \
+        --secret bwki-webhook-certs \
+        --namespace "${WEBHOOK_NAMESPACE}"
+fi
 
 cat $CRTDIR/deploy/bitfusion_mutating_webhook_configuration.yaml | \
     $CRTDIR/deploy/webhook-patch-ca-bundle.sh > \
