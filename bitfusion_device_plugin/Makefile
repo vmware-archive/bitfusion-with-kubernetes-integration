@@ -82,7 +82,8 @@ ifeq ($(K8S_PLATFORM),tkgi)
 	@echo "Create Pod Security Policy"
 	-kubectl delete -f $(PSP_YAML)
 	@kubectl create -f $(PSP_YAML)
-	kubectl -n kube-system create role psp:privileged \
+	-kubectl -n kube-system delete role psp:privileged
+	@kubectl -n kube-system create role psp:privileged \
     --verb=use \
     --resource=podsecuritypolicy \
     --resource-name=privileged
