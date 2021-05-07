@@ -61,6 +61,6 @@ echo "Create secret by local file"
 # create the secret with CA cert and server cert/key
 kubectl create secret generic bwki-webhook-certs \
         --from-file=key.pem=server-key.pem \
-        --from-file=cert.pem=server-cert.pem \
+        --from-file=cert.pem=server.pem \
         --dry-run -o yaml |
     kubectl -n bwki apply -f -

@@ -10,12 +10,12 @@ if [ -z "${CA_BUNDLE}" ]; then
     CA_BUNDLE=$(kubectl get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='default')].data.ca\.crt}")
 fi
 
-export CA_BUNDLE
 
 if [ "${K8S_PLATFORM}"=="tkgi" ]; then
-    echo "CA_BUNDLE from local file ca.pem"
     CA_BUNDLE=$(cat ca.pem | base64)
 fi
+
+export CA_BUNDLE
 
 if command -v envsubst >/dev/null 2>&1; then
     envsubst

@@ -82,6 +82,10 @@ ifeq ($(K8S_PLATFORM),tkgi)
 	@echo "Create Pod Security Policy"
 	-kubectl delete -f $(PSP_YAML)
 	@kubectl create -f $(PSP_YAML)
+	kubectl -n kube-system create role psp:privileged \
+    --verb=use \
+    --resource=podsecuritypolicy \
+    --resource-name=privileged
 	@kubectl --as=system:serviceaccount:kube-system:default -n kube-system  auth can-i use podsecuritypolicy/privileged
 endif
 	@echo "Create device-plugin ..."
