@@ -190,19 +190,10 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			if gpuNum != zeroQuantity && gpuPartial == zeroQuantity {
 				glog.Warning("No Partial was provide, use default value 100 which means 100%")
 				gpuPartial.Set(100)
-				patches = append(patches, patchOperation{
-					Op:   "remove",
-					Path: basePath + "/" + strconv.Itoa(i) + "/resources/requests/" + bitFusionGPUResourceNumEscape,
-				})
+				delete(target.Resources.Requests, bitFusionGPUResourceNum)
 			} else if gpuNum != zeroQuantity && gpuPartial != zeroQuantity {
-				patches = append(patches, patchOperation{
-					Op:   "remove",
-					Path: basePath + "/" + strconv.Itoa(i) + "/resources/requests/" + bitFusionGPUResourceNumEscape,
-				})
-				patches = append(patches, patchOperation{
-					Op:   "remove",
-					Path: basePath + "/" + strconv.Itoa(i) + "/resources/requests/" + bitFusionGPUResourcePartialEscape,
-				})
+				delete(target.Resources.Requests, bitFusionGPUResourceNum)
+				delete(target.Resources.Requests, bitFusionGPUResourcePartial)
 			} else if gpuNum == zeroQuantity && gpuPartial == zeroQuantity {
 				// No patch for this container
 				continue
@@ -265,11 +256,6 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 				})
 			}
 
-			// Construct bitFusionGPUResource
-			// Remove legacy
-			delete(target.Resources.Requests, bitFusionGPUResourceNum)
-			delete(target.Resources.Requests, bitFusionGPUResourcePartial)
-
 			// Construct quantity
 			gpuQuantity := &resource.Quantity{}
 			gpuQuantity.Set(gpuPartialNum * gpuNum.Value())
@@ -279,21 +265,11 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			targets[i] = target
 
 			patches = append(patches, patchOperation{
-				Op:   "add",
-				Path: basePath + "/" + strconv.Itoa(i) + "/resources/requests",
-				Value: map[string]resource.Quantity{
-					bitFusionGPUResource: *gpuQuantity,
-				},
+				Op:    "replace",
+				Path:  basePath + "/" + strconv.Itoa(i) + "/resources/requests",
+				Value: target.Resources.Requests,
 			})
-			patches = append(patches, patchOperation{
-				Op:   "add",
-				Path: basePath + "/" + strconv.Itoa(i) + "/resources",
-				Value: map[string]map[string]resource.Quantity{
-					"limits": {
-						bitFusionGPUResource: *gpuQuantity,
-					},
-				},
-			})
+			glog.Infof("Now patches === %v", patches)
 		}
 	}
 	return patches, nil
