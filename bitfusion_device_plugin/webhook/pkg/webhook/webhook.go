@@ -266,7 +266,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 
 			patches = append(patches, patchOperation{
 				Op:    "replace",
-				Path:  basePath + "/" + strconv.Itoa(i) + "/resources/requests",
+				Path:  basePath + "/" + strconv.Itoa(i) + "/resources/limits",
 				Value: target.Resources.Requests,
 			})
 			glog.Infof("Now patches === %v", patches)
