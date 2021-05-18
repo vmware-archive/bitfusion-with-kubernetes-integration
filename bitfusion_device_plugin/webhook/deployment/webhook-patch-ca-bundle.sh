@@ -13,6 +13,7 @@ fi
 
 if [ "${K8S_PLATFORM}" == 'tkgi' ]; then
     CA_BUNDLE=$(cat ca.pem | base64)
+    echo $CA_BUNDLE
 fi
 
 export CA_BUNDLE
