@@ -12,8 +12,12 @@ fi
 
 
 if [ "${K8S_PLATFORM}" == 'tkgi' ]; then
-    CA_BUNDLE=$(cat ca.pem | base64)
-    echo $CA_BUNDLE
+    str=""
+    for line in `cat ca.pem | base64`
+            do
+            str=$str$line
+    done
+    CA_BUNDLE=$str
 fi
 
 export CA_BUNDLE
