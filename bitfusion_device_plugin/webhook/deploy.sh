@@ -30,7 +30,7 @@ chmod 777  $CRTDIR//deploy/webhook-create-ca.sh
 # Create signed cert
 echo "K8S_PLATFORM == ${K8S_PLATFORM}"
 
-if [ "${K8S_PLATFORM}"=="tkgi" ]; then
+if [ "${K8S_PLATFORM}" == "tkgi" ]; then
     echo "Run webhook-create-ca.sh"
     $CRTDIR/deploy/webhook-create-ca.sh
 else
