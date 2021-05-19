@@ -352,13 +352,44 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 	return patch
 }
 
+func updateInitContainersResources(target, added []corev1.Container) []corev1.Container {
+	maxCpu := zeroQuantity
+	maxMem := zeroQuantity
+	for _, container := range target {
+		if cpuNum, has := container.Resources.Limits["cpu"]; has {
+			if cpuNum.Cmp(maxCpu) > 0 {
+				maxCpu = cpuNum
+			}
+		}
+		if memNum, has := container.Resources.Limits["memory"]; has {
+			if memNum.Cmp(maxMem) > 0 {
+				maxMem = memNum
+			}
+		}
+	}
+	if maxCpu != zeroQuantity {
+		for _, container := range added {
+			glog.Infof("maxCpu = %v", maxMem)
+			container.Resources.Limits["cpu"] = maxCpu
+		}
+	}
+
+	if maxMem != zeroQuantity {
+		for _, container := range added {
+			glog.Infof("maxMem = %v", maxMem)
+			container.Resources.Limits["memory"] = maxMem
+		}
+	}
+
+	return added
+}
+
 // createPatch creates mutation patch for resource
 func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]string) ([]byte, error) {
 	var patch []patchOperation
-
 	var err error
-
-	patch = append(patch, addContainer(pod.Spec.InitContainers, sidecarConfig.InitContainers, "/spec/initContainers")...)
+	initContainers := updateInitContainersResources(pod.Spec.InitContainers, sidecarConfig.InitContainers)
+	patch = append(patch, addContainer(pod.Spec.InitContainers, initContainers, "/spec/initContainers")...)
 	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
 	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
 	patch = append(patch, updateContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers")...)
