@@ -388,7 +388,7 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]string) ([]byte, error) {
 	var patch []patchOperation
 	var err error
-	initContainers := updateInitContainersResources(pod.Spec.InitContainers, sidecarConfig.InitContainers)
+	initContainers := updateInitContainersResources(pod.Spec.Containers, sidecarConfig.InitContainers)
 	patch = append(patch, addContainer(pod.Spec.InitContainers, initContainers, "/spec/initContainers")...)
 	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
 	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
