@@ -370,6 +370,9 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 	if maxCpu != zeroQuantity {
 		for _, container := range added {
 			glog.Infof("maxCpu = %v", maxMem)
+			if container.Resources.Limits == nil {
+				container.Resources.Limits = make(corev1.ResourceList)
+			}
 			container.Resources.Limits["cpu"] = maxCpu
 		}
 	}
@@ -377,6 +380,9 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 	if maxMem != zeroQuantity {
 		for _, container := range added {
 			glog.Infof("maxMem = %v", maxMem)
+			if container.Resources.Limits == nil {
+				container.Resources.Limits = make(corev1.ResourceList)
+			}
 			container.Resources.Limits["memory"] = maxMem
 		}
 	}
