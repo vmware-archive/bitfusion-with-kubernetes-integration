@@ -368,24 +368,24 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 		}
 	}
 	if maxCpu != zeroQuantity {
-		for _, container := range added {
+		for i := range added {
 			glog.Infof("maxCpu = %v", maxMem)
-			if container.Resources.Limits == nil {
-				container.Resources.Limits = make(corev1.ResourceList)
+			if added[i].Resources.Limits == nil {
+				added[i].Resources.Limits = make(corev1.ResourceList)
 			}
-			container.Resources.Limits["cpu"] = maxCpu
-			glog.Infof("container.Resources.Limits  == %v", container.Resources.Limits)
+			added[i].Resources.Limits["cpu"] = maxCpu
+			glog.Infof("container.Resources.Limits  == %v", added[i].Resources.Limits)
 		}
 	}
 
 	if maxMem != zeroQuantity {
-		for _, container := range added {
+		for i := range added {
 			glog.Infof("maxMem = %v", maxMem)
-			if container.Resources.Limits == nil {
-				container.Resources.Limits = make(corev1.ResourceList)
+			if added[i].Resources.Limits == nil {
+				added[i].Resources.Limits = make(corev1.ResourceList)
 			}
-			container.Resources.Limits["memory"] = maxMem
-			glog.Infof("container.Resources.Limits  == %v", container.Resources.Limits)
+			added[i].Resources.Limits["memory"] = maxMem
+			glog.Infof("container.Resources.Limits  == %v", added[i].Resources.Limits)
 		}
 	}
 	return added
