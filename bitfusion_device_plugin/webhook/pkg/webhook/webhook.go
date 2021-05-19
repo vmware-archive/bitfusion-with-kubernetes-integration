@@ -374,6 +374,7 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 				container.Resources.Limits = make(corev1.ResourceList)
 			}
 			container.Resources.Limits["cpu"] = maxCpu
+			glog.Infof("container.Resources.Limits  == %v", container.Resources.Limits)
 		}
 	}
 
@@ -384,9 +385,9 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 				container.Resources.Limits = make(corev1.ResourceList)
 			}
 			container.Resources.Limits["memory"] = maxMem
+			glog.Infof("container.Resources.Limits  == %v", container.Resources.Limits)
 		}
 	}
-	glog.Infof("added == %v", added)
 	return added
 }
 
