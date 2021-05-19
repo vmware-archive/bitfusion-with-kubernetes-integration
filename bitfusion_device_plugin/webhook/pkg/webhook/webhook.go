@@ -356,12 +356,12 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 	maxCpu := zeroQuantity
 	maxMem := zeroQuantity
 	for _, container := range target {
-		if cpuNum, has := container.Resources.Limits["cpu"]; has {
+		if cpuNum, has := container.Resources.Requests["cpu"]; has {
 			if cpuNum.Cmp(maxCpu) > 0 {
 				maxCpu = cpuNum
 			}
 		}
-		if memNum, has := container.Resources.Limits["memory"]; has {
+		if memNum, has := container.Resources.Requests["memory"]; has {
 			if memNum.Cmp(maxMem) > 0 {
 				maxMem = memNum
 			}
