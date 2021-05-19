@@ -380,7 +380,7 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 			container.Resources.Limits["memory"] = maxMem
 		}
 	}
-
+	glog.Infof("added == %v", added)
 	return added
 }
 
