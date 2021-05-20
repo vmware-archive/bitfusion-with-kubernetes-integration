@@ -191,9 +191,12 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 				glog.Warning("No Partial was provide, use default value 100 which means 100%")
 				gpuPartial.Set(100)
 				delete(target.Resources.Requests, bitFusionGPUResourceNum)
+				delete(target.Resources.Limits, bitFusionGPUResourceNum)
 			} else if gpuNum != zeroQuantity && gpuPartial != zeroQuantity {
 				delete(target.Resources.Requests, bitFusionGPUResourceNum)
+				delete(target.Resources.Limits, bitFusionGPUResourceNum)
 				delete(target.Resources.Requests, bitFusionGPUResourcePartial)
+				delete(target.Resources.Limits, bitFusionGPUResourcePartial)
 			} else if gpuNum == zeroQuantity && gpuPartial == zeroQuantity {
 				// No patch for this container
 				continue
@@ -260,6 +263,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			gpuQuantity := &resource.Quantity{}
 			gpuQuantity.Set(gpuPartialNum * gpuNum.Value())
 			target.Resources.Requests[bitFusionGPUResource] = *gpuQuantity
+			target.Resources.Limits[bitFusionGPUResource] = *gpuQuantity
 
 			// Create JSON patch to target containers
 			targets[i] = target
@@ -268,7 +272,14 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 				Op:   "replace",
 				Path: basePath + "/" + strconv.Itoa(i) + "/resources",
 				Value: map[string]corev1.ResourceList{
-					"limits": target.Resources.Requests,
+					"limits": target.Resources.Limits,
+				},
+			})
+			patches = append(patches, patchOperation{
+				Op:   "replace",
+				Path: basePath + "/" + strconv.Itoa(i) + "/resources",
+				Value: map[string]corev1.ResourceList{
+					"requests": target.Resources.Requests,
 				},
 			})
 			glog.Infof("Now patches === %v", patches)
