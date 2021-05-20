@@ -366,15 +366,27 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 func updateInitContainersResources(target, added []corev1.Container) []corev1.Container {
 	maxCpu := zeroQuantity
 	maxMem := zeroQuantity
+	maxReqCpu := zeroQuantity
+	maxReqMem := zeroQuantity
 	for _, container := range target {
-		if cpuNum, has := container.Resources.Requests["cpu"]; has {
+		if cpuNum, has := container.Resources.Limits["cpu"]; has {
 			if cpuNum.Cmp(maxCpu) > 0 {
 				maxCpu = cpuNum
 			}
 		}
-		if memNum, has := container.Resources.Requests["memory"]; has {
+		if cpuNum, has := container.Resources.Requests["cpu"]; has {
+			if cpuNum.Cmp(maxReqCpu) > 0 {
+				maxReqCpu = cpuNum
+			}
+		}
+		if memNum, has := container.Resources.Limits["memory"]; has {
 			if memNum.Cmp(maxMem) > 0 {
 				maxMem = memNum
+			}
+		}
+		if memNum, has := container.Resources.Requests["memory"]; has {
+			if memNum.Cmp(maxReqMem) > 0 {
+				maxReqMem = memNum
 			}
 		}
 	}
@@ -397,6 +409,28 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 			}
 			added[i].Resources.Limits["memory"] = maxMem
 			glog.Infof("container.Resources.Limits  == %v", added[i].Resources.Limits)
+		}
+	}
+
+	if maxReqCpu != zeroQuantity {
+		for i := range added {
+			glog.Infof("maxReqCpu = %v", maxReqCpu)
+			if added[i].Resources.Requests == nil {
+				added[i].Resources.Requests = make(corev1.ResourceList)
+			}
+			added[i].Resources.Requests["cpu"] = maxReqCpu
+			glog.Infof("container.Resources.Requests  == %v", added[i].Resources.Requests)
+		}
+	}
+
+	if maxReqMem != zeroQuantity {
+		for i := range added {
+			glog.Infof("maxReqMem = %v", maxReqMem)
+			if added[i].Resources.Requests == nil {
+				added[i].Resources.Requests = make(corev1.ResourceList)
+			}
+			added[i].Resources.Requests["memory"] = maxReqMem
+			glog.Infof("container.Resources.Requests  == %v", added[i].Resources.Requests)
 		}
 	}
 	return added
