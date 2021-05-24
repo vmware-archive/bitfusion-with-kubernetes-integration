@@ -6,7 +6,7 @@ DEVICE_IMAGE_NAME ?= bitfusion-device-plugin
 WEBHOOK_IMAGE_NAME ?= bitfusion-webhook
 PKG_IMAGE_NAME ?= bitfusion-client
 IMAGE_TAG  ?= 0.1
-K8S_PLATFORM ?= tkgi
+K8S_PLATFORM ?= community
 
 export K8S_PLATFORM
 
