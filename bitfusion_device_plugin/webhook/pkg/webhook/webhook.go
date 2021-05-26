@@ -216,10 +216,8 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 				if ok {
 
 					command = fmt.Sprintf("bitfusion run -n %s -m %d", gpuNum.String(), m)
-					patches = append(patches, patchOperation{
-						Op:   "remove",
-						Path: basePath + "/" + strconv.Itoa(i) + "/resources/requests/" + bitFusionGPUResourceMemoryEscape,
-					})
+					delete(target.Resources.Requests, bitFusionGPUResourceMemory)
+					delete(target.Resources.Limits, bitFusionGPUResourceMemory)
 				} else {
 					glog.Error("gpuMemory.AsInt64 Error")
 					return patches, fmt.Errorf("gpuMemory.AsInt64 Error")
@@ -388,48 +386,40 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 			}
 		}
 	}
-	if maxCpu != zeroQuantity {
-		for i := range added {
-			glog.Infof("maxCpu = %v", maxMem)
-			if added[i].Resources.Limits == nil {
-				added[i].Resources.Limits = make(corev1.ResourceList)
-			}
-			added[i].Resources.Limits["cpu"] = maxCpu
-			glog.Infof("container.Resources.Limits  == %v", added[i].Resources.Limits)
+	for i := range added {
+		glog.Infof("maxCpu = %v", maxMem)
+		if added[i].Resources.Limits == nil {
+			added[i].Resources.Limits = make(corev1.ResourceList)
 		}
+		added[i].Resources.Limits["cpu"] = maxCpu
+		glog.Infof("container.Resources.Limits  == %v", added[i].Resources.Limits)
 	}
 
-	if maxMem != zeroQuantity {
-		for i := range added {
-			glog.Infof("maxMem = %v", maxMem)
-			if added[i].Resources.Limits == nil {
-				added[i].Resources.Limits = make(corev1.ResourceList)
-			}
-			added[i].Resources.Limits["memory"] = maxMem
-			glog.Infof("container.Resources.Limits  == %v", added[i].Resources.Limits)
+	for i := range added {
+		glog.Infof("maxMem = %v", maxMem)
+		if added[i].Resources.Limits == nil {
+			added[i].Resources.Limits = make(corev1.ResourceList)
 		}
+		added[i].Resources.Limits["memory"] = maxMem
+		glog.Infof("container.Resources.Limits  == %v", added[i].Resources.Limits)
 	}
 
-	if maxReqCpu != zeroQuantity {
-		for i := range added {
-			glog.Infof("maxReqCpu = %v", maxReqCpu)
-			if added[i].Resources.Requests == nil {
-				added[i].Resources.Requests = make(corev1.ResourceList)
-			}
-			added[i].Resources.Requests["cpu"] = maxReqCpu
-			glog.Infof("container.Resources.Requests  == %v", added[i].Resources.Requests)
+	for i := range added {
+		glog.Infof("maxReqCpu = %v", maxReqCpu)
+		if added[i].Resources.Requests == nil {
+			added[i].Resources.Requests = make(corev1.ResourceList)
 		}
+		added[i].Resources.Requests["cpu"] = maxReqCpu
+		glog.Infof("container.Resources.Requests  == %v", added[i].Resources.Requests)
 	}
 
-	if maxReqMem != zeroQuantity {
-		for i := range added {
-			glog.Infof("maxReqMem = %v", maxReqMem)
-			if added[i].Resources.Requests == nil {
-				added[i].Resources.Requests = make(corev1.ResourceList)
-			}
-			added[i].Resources.Requests["memory"] = maxReqMem
-			glog.Infof("container.Resources.Requests  == %v", added[i].Resources.Requests)
+	for i := range added {
+		glog.Infof("maxReqMem = %v", maxReqMem)
+		if added[i].Resources.Requests == nil {
+			added[i].Resources.Requests = make(corev1.ResourceList)
 		}
+		added[i].Resources.Requests["memory"] = maxReqMem
+		glog.Infof("container.Resources.Requests  == %v", added[i].Resources.Requests)
 	}
 	return added
 }
