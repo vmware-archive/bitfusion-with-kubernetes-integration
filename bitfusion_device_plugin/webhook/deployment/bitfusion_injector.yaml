@@ -20,8 +20,8 @@ spec:
           image: phaedobf/sidecar-injector:v0.1
           imagePullPolicy: IfNotPresent
           env:
-          - name: TOTAL_GPU_MEMORY
-            value: 16000
+            - name: TOTAL_GPU_MEMORY
+              value: "16000"
           args:
           - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml
           - -tlsCertFile=/etc/webhook/certs/cert.pem
