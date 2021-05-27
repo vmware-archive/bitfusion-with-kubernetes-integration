@@ -19,6 +19,8 @@ spec:
         - name: bwki
           image: phaedobf/sidecar-injector:v0.1
           imagePullPolicy: IfNotPresent
+          env:
+
           args:
           - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml
           - -tlsCertFile=/etc/webhook/certs/cert.pem
