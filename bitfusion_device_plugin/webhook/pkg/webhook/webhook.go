@@ -268,6 +268,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			gpuQuantity := &resource.Quantity{}
 			if gpuMemory != zeroQuantity {
 				res := float64(gpuMemory.Value()) / float64(totalMem.Value())
+				glog.Infof("res === %f", res)
 				gpuQuantity.Set(int64(math.Ceil(res)) * 100 * gpuNum.Value())
 			} else {
 				gpuQuantity.Set(gpuPartialNum * gpuNum.Value())
