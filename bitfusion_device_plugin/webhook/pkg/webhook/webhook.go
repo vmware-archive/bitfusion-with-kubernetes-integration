@@ -221,7 +221,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 				glog.Infof("totalMem = %d", totalMem.Value())
 				m, ok := gpuMemory.AsInt64()
 				if ok {
-
+					glog.Infof("gpuMemory === %d", m)
 					command = fmt.Sprintf("bitfusion run -n %s -m %d", gpuNum.String(), m)
 					delete(target.Resources.Requests, bitFusionGPUResourceMemory)
 					delete(target.Resources.Limits, bitFusionGPUResourceMemory)
@@ -267,9 +267,9 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			// Construct quantity
 			gpuQuantity := &resource.Quantity{}
 			if gpuMemory != zeroQuantity {
-				res := float64(gpuMemory.Value()) / float64(totalMem.Value())
-				glog.Infof("res === %f", res)
-				gpuQuantity.Set(int64(math.Ceil(res*100)) * gpuNum.Value())
+				rate := float64(gpuMemory.Value()) / float64(totalMem.Value())
+				glog.Infof("rate === %f", rate)
+				gpuQuantity.Set(int64(math.Ceil(rate * float64(gpuNum.Value()) * 100)))
 			} else {
 				gpuQuantity.Set(gpuPartialNum * gpuNum.Value())
 			}
