@@ -12,7 +12,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -211,7 +213,11 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 				return patches, fmt.Errorf("Invalid %s quantity: %d ", bitFusionGPUResourcePartial, gpuPartialNum)
 			}
 			var command string
+			var totalMem resource.Quantity
+			totalMemStr := os.Getenv("TOTAL_GPU_MEMORY")
+			glog.Infof("totalMem = %s", totalMem)
 			if gpuMemory != zeroQuantity {
+				totalMem = resource.MustParse(totalMemStr)
 				m, ok := gpuMemory.AsInt64()
 				if ok {
 
@@ -259,7 +265,12 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 
 			// Construct quantity
 			gpuQuantity := &resource.Quantity{}
-			gpuQuantity.Set(gpuPartialNum * gpuNum.Value())
+			if gpuMemory != zeroQuantity {
+				res := float64(gpuMemory.Value()) / float64(totalMem.Value())
+				gpuQuantity.Set(int64(math.Ceil(res)) * 100 * gpuNum.Value())
+			} else {
+				gpuQuantity.Set(gpuPartialNum * gpuNum.Value())
+			}
 			target.Resources.Requests[bitFusionGPUResource] = *gpuQuantity
 			target.Resources.Limits[bitFusionGPUResource] = *gpuQuantity
 
