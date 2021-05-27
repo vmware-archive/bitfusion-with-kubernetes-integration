@@ -215,9 +215,10 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			var command string
 			var totalMem resource.Quantity
 			totalMemStr := os.Getenv("TOTAL_GPU_MEMORY")
-			glog.Infof("totalMem = %s", totalMemStr)
+			glog.Infof("totalMemStr = %s", totalMemStr)
 			if gpuMemory != zeroQuantity {
 				totalMem = resource.MustParse(totalMemStr)
+				glog.Infof("totalMem = %d", totalMem.Value())
 				m, ok := gpuMemory.AsInt64()
 				if ok {
 
