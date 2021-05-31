@@ -226,11 +226,11 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 				m, ok := gpuMemory.AsInt64()
 				if ok {
 					m = m / 1000
+					glog.Infof("gpuMemory = %d", m)
 					if m <= 0 || m >= totalMem.Value() {
 						glog.Error("Memory value Error")
 						return patches, fmt.Errorf("Memory value Error ")
 					}
-					glog.Infof("gpuMemory = %d", m)
 					command = fmt.Sprintf("bitfusion run -n %s -m %d", gpuNum.String(), m)
 					delete(target.Resources.Requests, bitFusionGPUResourceMemory)
 					delete(target.Resources.Limits, bitFusionGPUResourceMemory)
