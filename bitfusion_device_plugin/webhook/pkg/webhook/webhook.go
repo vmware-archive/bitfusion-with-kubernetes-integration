@@ -225,7 +225,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 				glog.Infof("gpuMemory = %s", gpuMemory)
 				m, ok := gpuMemory.AsInt64()
 				if ok {
-					m = m / 1000
+					m = m / 1000000
 					glog.Infof("gpuMemory = %d", m)
 					if m <= 0 || m >= totalMem.Value() {
 						glog.Error("Memory value Error")
@@ -276,7 +276,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			// Construct quantity
 			gpuQuantity := &resource.Quantity{}
 			if gpuMemory != zeroQuantity {
-				rate := float64(gpuMemory.Value()/1000) / float64(totalMem.Value())
+				rate := float64(gpuMemory.Value()/1000000) / float64(totalMem.Value())
 				glog.Infof("rate = %f", rate)
 				gpuQuantity.Set(int64(math.Ceil(rate * float64(gpuNum.Value()) * 100)))
 			} else {
