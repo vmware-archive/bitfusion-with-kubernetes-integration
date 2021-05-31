@@ -185,6 +185,9 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 
 			// Check bitFusionGPUResourceNum
 			gpuNum := target.Resources.Requests[bitFusionGPUResourceNum]
+			if gpuNum.Value() <= 0 {
+				return patches, fmt.Errorf("gpuNum.Value() Error ")
+			}
 
 			// Check bitFusionGPUResourcePartial and set fallback
 			gpuPartial := target.Resources.Requests[bitFusionGPUResourcePartial]
