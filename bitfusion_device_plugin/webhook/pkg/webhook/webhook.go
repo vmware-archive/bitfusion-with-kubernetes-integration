@@ -209,7 +209,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			gpuPartialNum := gpuPartial.Value()
 
 			// Also return error if exceed 100% or equals 0%
-			if gpuPartialNum > 100 || gpuPartialNum == 0 {
+			if gpuPartialNum > 100 || gpuPartialNum <= 0 {
 				return patches, fmt.Errorf("Invalid %s quantity: %d ", bitFusionGPUResourcePartial, gpuPartialNum)
 			}
 			var command string
@@ -219,10 +219,15 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			if gpuMemory != zeroQuantity {
 				totalMem = resource.MustParse(totalMemStr)
 				glog.Infof("totalMem = %d", totalMem.Value())
-				glog.Infof("gpuMemory === %s", gpuMemory)
+				glog.Infof("gpuMemory = %s", gpuMemory)
 				m, ok := gpuMemory.AsInt64()
 				if ok {
-					glog.Infof("gpuMemory === %d", m)
+					m = m / 1000
+					if m <= 0 || m >= totalMem.Value() {
+						glog.Error("Memory value Error")
+						return patches, fmt.Errorf("Memory value Error ")
+					}
+					glog.Infof("gpuMemory = %d", m)
 					command = fmt.Sprintf("bitfusion run -n %s -m %d", gpuNum.String(), m)
 					delete(target.Resources.Requests, bitFusionGPUResourceMemory)
 					delete(target.Resources.Limits, bitFusionGPUResourceMemory)
@@ -232,10 +237,10 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 
 				}
 			} else {
-				command = fmt.Sprintf("bitfusion run -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
+				command = fmt.Sprintf("bitfusion run -n %d -p %f", gpuNum.Value(), float64(gpuPartialNum)/100.0)
 			}
-			glog.Infof("Request gpu with num %v", gpuNum.String())
-			glog.Infof("Request gpu with partial %v", gpuPartial.String())
+			glog.Infof("Request gpu with num %v", gpuNum.Value())
+			glog.Infof("Request gpu with partial %v", gpuPartial.Value())
 
 			hasPrefix := false
 			for _, v := range target.Command {
@@ -268,8 +273,8 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			// Construct quantity
 			gpuQuantity := &resource.Quantity{}
 			if gpuMemory != zeroQuantity {
-				rate := float64(gpuMemory.Value()) / float64(totalMem.Value())
-				glog.Infof("rate === %f", rate)
+				rate := float64(gpuMemory.Value()/1000) / float64(totalMem.Value())
+				glog.Infof("rate = %f", rate)
 				gpuQuantity.Set(int64(math.Ceil(rate * float64(gpuNum.Value()) * 100)))
 			} else {
 				gpuQuantity.Set(gpuPartialNum * gpuNum.Value())
