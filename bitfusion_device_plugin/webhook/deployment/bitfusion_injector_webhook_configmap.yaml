@@ -7,7 +7,7 @@ data:
   sidecarconfig.yaml: |
     initContainers:
     - name: populate
-      image: phaedobf/bitfusion-client-ubuntu1804_2.5.0-10_amd64:v0.1
+      image: bitfusiondeviceplugin/bitfusion-client:test
       command: [/bin/bash, -c, "
             cp -a /bitfusion /bitfusion-distro
             "]

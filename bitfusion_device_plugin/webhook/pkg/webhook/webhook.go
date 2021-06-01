@@ -279,8 +279,8 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 			if gpuMemory != zeroQuantity {
 				m, ok := gpuMemory.AsInt64()
 				if ok {
-					//command = fmt.Sprintf(bfClientConfig.BinaryPath + " -n %s -m %d", gpuNum.String(), m)
-					command = fmt.Sprintf("bitfusion run -n %s -m %d", gpuNum.String(), m)
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" -n %s -m %d", gpuNum.String(), m)
+					//command = fmt.Sprintf("bitfusion run -n %s -m %d", gpuNum.String(), m)
 					patches = append(patches, patchOperation{
 						Op:   "remove",
 						Path: basePath + "/" + strconv.Itoa(i) + "/resources/requests/" + bitFusionGPUResourceMemoryEscape,
@@ -291,8 +291,8 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 
 				}
 			} else {
-				//command = fmt.Sprintf(bfClientConfig.BinaryPath + " -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
-				command = fmt.Sprintf("bitfusion run -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
+				command = fmt.Sprintf(bfClientConfig.BinaryPath+" -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
+				//command = fmt.Sprintf("bitfusion run -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
 			}
 			glog.Infof("Request gpu with num %v", gpuNum.String())
 			glog.Infof("Request gpu with partial %v", gpuPartial.String())
@@ -379,8 +379,8 @@ func updateContainer(targets, source []corev1.Container, basePath string, bfClie
 		//container.Env = append(container.Env, source[0].Env...)
 		env := corev1.EnvVar{Name: "LD_LIBRARY_PATH", Value: bfClientConfig.EnvVariable}
 		container.Env = append(container.Env, env)
-		env = corev1.EnvVar{Name: "PATH", Value: bfClientConfig.BinaryPath + ":$PATH"}
-		container.Env = append(container.Env, env)
+		//env = corev1.EnvVar{Name: "PATH", Value: bfClientConfig.BinaryPath + ":$PATH"}
+		//container.Env = append(container.Env, env)
 		patches = append(patches, patchOperation{
 			Op:    "replace",
 			Path:  fmt.Sprintf("%s/%d/env", basePath, i),
