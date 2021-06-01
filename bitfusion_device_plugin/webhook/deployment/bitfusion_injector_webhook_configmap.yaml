@@ -9,11 +9,11 @@ data:
     - name: populate
       image: phaedobf/bitfusion-client-ubuntu1804_2.5.0-10_amd64:v0.1
       command: [/bin/bash, -c, "
-            cp -a /bitfusion /bitfusion
+            cp -a /bitfusion /bitfusion-distro
             "]
       volumeMounts:
       - name: bitfusion
-        mountPath: /bitfusion
+        mountPath: /bitfusion-distro
       - name: client-dir
         mountPath: /client
       - name: client
