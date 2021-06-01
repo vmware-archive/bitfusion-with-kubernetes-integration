@@ -39,6 +39,8 @@ var (
 
 	defaulter    = runtime.ObjectDefaulter(runtimeScheme)
 	zeroQuantity = resource.Quantity{}
+
+	injectionStatus = ""
 )
 
 var ignoredNamespaces = []string{
@@ -50,13 +52,11 @@ const (
 	admissionWebhookAnnotationInjectKey = "auto-management/bitfusion"
 	admissionWebhookAnnotationStatusKey = "auto-management/status"
 	// "~1" is used for escape (http://jsonpatch.com/)
-	bitFusionGPUResource              = "bitfusion.io/gpu"
-	bitFusionGPUResourceNum           = "bitfusion.io/gpu-num"
-	bitFusionGPUResourceMemory        = "bitfusion.io/gpu-memory"
-	bitFusionGPUResourcePartial       = "bitfusion.io/gpu-percent"
-	bitFusionGPUResourceNumEscape     = "bitfusion.io~1gpu-num"
-	bitFusionGPUResourcePartialEscape = "bitfusion.io~1gpu-percent"
-	bitFusionGPUResourceMemoryEscape  = "bitfusion.io~1gpu-memory"
+	bitFusionGPUResource        = "bitfusion.io/gpu"
+	bitFusionGPUResourceNum     = "bitfusion.io/gpu-num"
+	bitFusionGPUResourceMemory  = "bitfusion.io/gpu-memory"
+	bitFusionGPUResourcePartial = "bitfusion.io/gpu-percent"
+	bitFusionOnlyInjection      = "only-injection"
 )
 
 // WebhookServer struct
@@ -143,6 +143,9 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 		default:
 			required = false
 		case "y", "yes", "true", "on":
+			required = true
+		case bitFusionOnlyInjection:
+			injectionStatus = bitFusionOnlyInjection
 			required = true
 		}
 	}
@@ -263,7 +266,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 				command += " " + v
 
 			}
-			if !hasPrefix {
+			if !hasPrefix && injectionStatus != bitFusionOnlyInjection {
 				cmd := []string{"/bin/bash", "-c", command}
 				target.Command = cmd
 				patches = append(patches, patchOperation{
@@ -489,6 +492,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		req.Kind, req.Namespace, req.Name, pod.Name, req.UID, req.Operation, req.UserInfo)
 
 	// Determine whether to perform mutation
+	injectionStatus = ""
 	if !mutationRequired(ignoredNamespaces, &pod.ObjectMeta) {
 		glog.Infof("Skipping mutation for %s/%s due to policy check", pod.Namespace, pod.Name)
 		return &v1beta1.AdmissionResponse{

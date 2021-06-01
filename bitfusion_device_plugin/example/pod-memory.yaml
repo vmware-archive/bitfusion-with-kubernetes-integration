@@ -14,7 +14,7 @@ spec:
       resources:
         limits:
           bitfusion.io/gpu-num: 1
-          bitfusion.io/gpu-memory: 10000
+          bitfusion.io/gpu-memory: 1000M
       volumeMounts:
         - name: code
           mountPath: /benchmark
