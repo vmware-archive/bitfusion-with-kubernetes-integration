@@ -21,6 +21,7 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
           - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml
+          - -bitfusionClientConfig=/etc/webhook/bitfusion-client-config/bitfusion-client-config.yaml
           - -tlsCertFile=/etc/webhook/certs/cert.pem
           - -tlsKeyFile=/etc/webhook/certs/key.pem
           - -alsologtostderr
@@ -32,6 +33,8 @@ spec:
             readOnly: true
           - name: webhook-config
             mountPath: /etc/webhook/config
+          - name: webhook-bitfusion-client-config
+            mountPath: /etc/webhook/bitfusion-client-config
       volumes:
       - name: webhook-certs
         secret:
@@ -39,3 +42,6 @@ spec:
       - name: webhook-config
         configMap:
           name: bwki-webhook-configmap
+      - name: webhook-bitfusion-client-config
+        configMap:
+          name: bwki-bitfusion-client-configmap

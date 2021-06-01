@@ -8,6 +8,8 @@ spec:
     metadata:
       annotations:
         auto-management/bitfusion: "yes"
+        bitfusion-client/os: "centos7"
+        bitfusion-client/version: "250"
       name: bf-pkgs
     spec:
       restartPolicy: OnFailure

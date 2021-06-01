@@ -49,7 +49,7 @@ data:
       image: container
       env:
       - name: LD_LIBRARY_PATH
-        value: "/bitfusion/usr/lib/x86_64-linux-gnu/:/bitfusion/usr/local/lib/:/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/:/usr/share/bitfusion/:/bitfusion/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"
+        value: ""
       volumeMounts:
       - name: ca
         mountPath: /etc/bitfusion
