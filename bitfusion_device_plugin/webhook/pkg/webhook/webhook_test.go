@@ -290,5 +290,5 @@ func TestUpdateBFResource(t *testing.T) {
 	testPod.Spec.Containers[0].Resources.Requests[bitFusionGPUResourcePartial] = p
 	_, err = updateBFResource(testPod.Spec.Containers, "spec/containers")
 	t.Log(err)
-	assert.Equal(t, err, nil)
+	assert.NotNil(t, err)
 }
