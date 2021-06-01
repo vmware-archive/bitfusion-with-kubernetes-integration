@@ -9,9 +9,11 @@ data:
     - name: populate
       image: phaedobf/bitfusion-client-ubuntu1804_2.5.0-10_amd64:v0.1
       command: [/bin/bash, -c, "
-            cp /root/.bitfusion/client.yaml /client
+            cp -a /bitfusion /bitfusion
             "]
       volumeMounts:
+      - name: bitfusion
+        mountPath: /bitfusion
       - name: client-dir
         mountPath: /client
       - name: client
@@ -24,6 +26,8 @@ data:
       - name: LD_LIBRARY_PATH
         value: ""
       volumeMounts:
+      - name: bitfusion
+        mountPath: /bitfusion
       - name: ca
         mountPath: /etc/bitfusion
       - name: client-dir
@@ -33,6 +37,8 @@ data:
         mountPath: /root/.bitfusion/servers.conf
         subPath: servers.conf
     volumes:
+    - name: bitfusion
+      emptyDir: {}
     - name: client-dir
       emptyDir: {}
     - name: ca
