@@ -30,7 +30,7 @@ var PodPath = "../../../example/pod.yaml"
 var MemPodPath = "../../../example/pod-memory.yaml"
 var StaticPod corev1.Pod
 var StaticMemPod corev1.Pod
-var CfgPath = "../../deployment/configmap.yaml"
+var CfgPath = "../../deployment/bitfusion_injector_webhook_configmap.yaml"
 var Cfg corev1.ConfigMap
 
 var vfcfgstr = `initContainers:
@@ -117,19 +117,19 @@ func TestLoadConfig(t *testing.T) {
 }
 
 func TestAddContainer(t *testing.T) {
-	pod := StaticPod
+	pod := StaticPod.DeepCopy()
 	patch := addContainer(pod.Spec.InitContainers, TestSidecarConfig.InitContainers, "/spec/initContainers")
 	assert.Equal(t, len(patch), 1)
 	patch = addContainer(pod.Spec.Containers, TestSidecarConfig.Containers, "/spec/containers")
 	assert.Equal(t, len(patch), 1)
 }
 func TestAddVolume(t *testing.T) {
-	pod := StaticPod
+	pod := StaticPod.DeepCopy()
 	patch := addVolume(pod.Spec.Volumes, TestSidecarConfig.Volumes, "/spec/volumes")
 	assert.Equal(t, len(patch), 1)
 }
 func TestUpdateAnnotation(t *testing.T) {
-	pod := StaticPod
+	pod := StaticPod.DeepCopy()
 	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
 	patch := updateAnnotation(pod.Annotations, annotations)
 	assert.Equal(t, len(patch), 1)
@@ -141,9 +141,10 @@ func TestUpdateAnnotation(t *testing.T) {
 }
 
 func TestCreatePatch(t *testing.T) {
-	pod := StaticPod
+	pod := StaticPod.DeepCopy()
 	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
-	_, err := createPatch(&pod, &TestSidecarConfig, annotations)
+	os.Setenv("TOTAL_GPU_MEMORY", "16000")
+	_, err := createPatch(pod, &TestSidecarConfig, annotations)
 	assert.Equal(t, err, nil)
 	mpod := StaticMemPod
 	_, err = createPatch(&mpod, &TestSidecarConfig, annotations)
@@ -152,7 +153,7 @@ func TestCreatePatch(t *testing.T) {
 }
 
 func TestMutationRequired(t *testing.T) {
-	pod := StaticPod
+	pod := StaticPod.DeepCopy()
 	res := mutationRequired(ignoredNamespaces, &pod.ObjectMeta)
 	assert.Equal(t, res, true)
 	mutationRequired([]string{"injection"}, &pod.ObjectMeta)
@@ -184,6 +185,7 @@ func TestWebhookServer_Mutate(t *testing.T) {
 	}
 	admissionResponse = mutatingWebhookSv.mutate(&ar)
 	t.Log(admissionResponse)
+	assert.Equal(t, admissionResponse.Allowed, false)
 }
 
 type responseWriter struct {
@@ -238,7 +240,7 @@ func TestWebhookServer_Serve(t *testing.T) {
 		Body:   f,
 		Header: header,
 	}
-	t.Log(req.Header.Get("Content-Type") == "application/json")
+	assert.Equal(t, req.Header.Get("Content-Type") == "application/json", true)
 
 	mutatingWebhookSv.Serve(&rw, &req)
 	f.Close()
@@ -262,7 +264,7 @@ func TestUpdateBFResource(t *testing.T) {
 
 		verifyList = append(verifyList, gpuNum.Value()*gpuPartial.Value())
 	}
-
+	t.Log(testPod.Spec.Containers)
 	patchs, err := updateBFResource(testPod.Spec.Containers, "spec/containers")
 	if err != nil {
 		t.Fatal(err)
@@ -273,7 +275,7 @@ func TestUpdateBFResource(t *testing.T) {
 		t.Log("Path ", patch.Path)
 		t.Log("Value: ", patch.Value)
 	}
-
+	testPod = StaticPod.DeepCopy()
 	for _, container := range testPod.Spec.Containers {
 		gpuResource := container.Resources.Requests[bitFusionGPUResource]
 		if gpuResource != emptyQuantity {
@@ -282,10 +284,11 @@ func TestUpdateBFResource(t *testing.T) {
 
 		//verifyList = verifyList[1:]
 	}
+	testPod = StaticPod.DeepCopy()
 	p := testPod.Spec.Containers[0].Resources.Requests[bitFusionGPUResourcePartial]
 	p.Set(101)
 	testPod.Spec.Containers[0].Resources.Requests[bitFusionGPUResourcePartial] = p
 	_, err = updateBFResource(testPod.Spec.Containers, "spec/containers")
 	t.Log(err)
-
+	assert.Equal(t, err, nil)
 }
