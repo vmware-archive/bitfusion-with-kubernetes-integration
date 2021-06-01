@@ -6,8 +6,9 @@ DEVICE_IMAGE_NAME ?= bitfusion-device-plugin
 WEBHOOK_IMAGE_NAME ?= bitfusion-webhook
 PKG_IMAGE_NAME ?= bitfusion-client
 IMAGE_TAG  ?= 0.1
+K8S_PLATFORM ?= community
 
-
+export K8S_PLATFORM
 
 PWD := $(shell pwd)
 BASE_DIR := $(shell basename $(PWD))
@@ -25,6 +26,8 @@ WEBHOOK_YAML_FILE := webhook/deployment/bitfusion_injector.yaml
 DEVICE_PLUGIN_YAML_TO_DEPLOY := device-plugin/deployment/deploy_device_plugin.yml
 CONFIGMAP_YAML_TO_DEPLOY := webhook/deployment/deploy_bitfusion_injector_webhook_configmap.yaml
 WEBHOOK_YAML_TO_DEPLOY := webhook/deployment/deploy_bitfusion_injector.yaml
+
+PSP_YAML := device-plugin/deployment/privileged.yaml
 
 LOCAL_OS := $(shell uname)
 ifeq ($(LOCAL_OS),Linux)
@@ -75,6 +78,17 @@ update:
 	@cat $(WEBHOOK_YAML_FILE) | sed -e "s|$(WEBHOOK_ORIGINAL_NAME)|$(IMAGE_REPO)/$(WEBHOOK_IMAGE_NAME):$(IMAGE_TAG)|g" > $(WEBHOOK_YAML_TO_DEPLOY)
 
 create: update
+ifeq ($(K8S_PLATFORM),tkgi)
+	@echo "Create Pod Security Policy"
+	-kubectl delete -f $(PSP_YAML)
+	@kubectl create -f $(PSP_YAML)
+	-kubectl -n kube-system delete role psp:privileged
+	@kubectl -n kube-system create role psp:privileged \
+    --verb=use \
+    --resource=podsecuritypolicy \
+    --resource-name=privileged
+	@kubectl --as=system:serviceaccount:kube-system:default -n kube-system  auth can-i use podsecuritypolicy/privileged
+endif
 	@echo "Create device-plugin ..."
 	-kubectl delete -f $(DEVICE_PLUGIN_YAML_TO_DEPLOY)
 	@kubectl create -f $(DEVICE_PLUGIN_YAML_TO_DEPLOY)
