@@ -279,7 +279,7 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 			if gpuMemory != zeroQuantity {
 				m, ok := gpuMemory.AsInt64()
 				if ok {
-					command = fmt.Sprintf(bfClientConfig.BinaryPath+" -n %s -m %d", gpuNum.String(), m)
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
 					//command = fmt.Sprintf("bitfusion run -n %s -m %d", gpuNum.String(), m)
 					patches = append(patches, patchOperation{
 						Op:   "remove",
@@ -291,39 +291,19 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 
 				}
 			} else {
-				command = fmt.Sprintf(bfClientConfig.BinaryPath+" -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
+				command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
 				//command = fmt.Sprintf("bitfusion run -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
 			}
 			glog.Infof("Request gpu with num %v", gpuNum.String())
 			glog.Infof("Request gpu with partial %v", gpuPartial.String())
 
-			hasPrefix := false
-			for _, v := range target.Command {
-
-				if strings.ToLower(v) == "/bin/bash" {
-					continue
-				}
-				if strings.ToLower(v) == "-c" {
-					continue
-				}
-
-				str := strings.TrimSpace(v)
-				if strings.HasPrefix(str, "bitfusion") {
-					hasPrefix = true
-				}
-
-				command += " " + v
-
-			}
-			if !hasPrefix {
-				cmd := []string{"/bin/bash", "-c", command}
-				target.Command = cmd
-				patches = append(patches, patchOperation{
-					Op:    "replace",
-					Path:  basePath + "/" + strconv.Itoa(i) + "/command",
-					Value: cmd,
-				})
-			}
+			cmd := []string{"/bin/bash", "-c", command}
+			target.Command = cmd
+			patches = append(patches, patchOperation{
+				Op:    "replace",
+				Path:  basePath + "/" + strconv.Itoa(i) + "/command",
+				Value: cmd,
+			})
 
 			// Construct bitFusionGPUResource
 			// Remove legacy
