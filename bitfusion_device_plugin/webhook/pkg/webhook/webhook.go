@@ -16,9 +16,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
-	//"github.com/ghodss/yaml"
-	yaml "gopkg.in/yaml.v2"
+	yamlv2 "gopkg.in/yaml.v2"
 	"k8s.io/api/admission/v1beta1"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -149,7 +149,7 @@ func ConstructBitfusionDistroInfo(configFile string) (*BitfusionClientDistro, er
 
 	var result BitfusionClientDistro
 
-	if err := yaml.Unmarshal(data, &result); err != nil {
+	if err := yamlv2.Unmarshal(data, &result); err != nil {
 		// error handling
 		return nil, err
 	}
