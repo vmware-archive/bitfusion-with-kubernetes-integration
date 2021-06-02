@@ -101,7 +101,10 @@ endif
 clear: clear-object clear-file
 
 clear-object:
+	@echo "Delete namespace bwki ..."
 	@kubectl delete ns bwki
+	@echo "Delete device-plugin ..."
+	@kubectl delete -f $(DEVICE_PLUGIN_YAML_TO_DEPLOY)
 
 clear-file:
 	@rm -rf webhook/deploy
