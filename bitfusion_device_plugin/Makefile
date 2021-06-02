@@ -101,12 +101,7 @@ endif
 clear: clear-object clear-file
 
 clear-object:
-	@kubectl delete -f webhook/deploy/deploy_bitfusion_injector.yaml
-	@kubectl delete -f webhook/deploy/bitfusion_injector_service.yaml
-	@kubectl delete -f webhook/deploy/deploy_bitfusion_injector_webhook_configmap.yaml
-	@kubectl delete -f webhook/deploy/bitfusion_mutating_webhook_configuration.yaml
-	@kubectl delete -f webhook/deploy/bitfusion_service_account.yaml
-	@kubectl delete -f webhook/deploy/bitfusion_validating_webhook_configuration.yaml
+	@kubectl delete ns bwki
 
 clear-file:
 	@rm -rf webhook/deploy
