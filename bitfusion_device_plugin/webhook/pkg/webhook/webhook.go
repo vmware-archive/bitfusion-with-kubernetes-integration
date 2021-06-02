@@ -449,6 +449,10 @@ func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]
 	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
 	patch = append(patch, updateContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers", bfClientConfig)...)
 
+	glog.Infof("sidecarConfig: %v", sidecarConfig.InitContainers)
+	glog.Infof("sidecarConfig.Containers: %v", sidecarConfig.Containers)
+	glog.Infof("patch: %v", patch)
+
 	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers", bfClientConfig)
 	if err != nil {
 		glog.Errorf("Unable to create json patch for bitfusion resource")
