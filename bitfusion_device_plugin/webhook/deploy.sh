@@ -48,11 +48,10 @@ cat $CRTDIR/deploy/bitfusion_validating_webhook_configuration.yaml | \
     $CRTDIR/deploy/webhook-patch-ca-bundle.sh > \
     $CRTDIR/deploy/validationwebhook-ca-bundle.yaml
 
-
+kubectl apply -f $CRTDIR/deploy/bitfusion_service_account.yaml
 kubectl apply -f $CRTDIR/deploy/deploy_bitfusion_injector.yaml
 kubectl apply -f $CRTDIR/deploy/bitfusion_injector_service.yaml
 kubectl apply -f $CRTDIR/deploy/deploy_bitfusion_injector_webhook_configmap.yaml
-kubectl apply -f $CRTDIR/deploy/bitfusion_service_account.yaml
 kubectl apply -f $CRTDIR/deploy/validationwebhook-ca-bundle.yaml
 kubectl apply -f $CRTDIR/deploy/mutatingwebhook-ca-bundle.yaml
 
