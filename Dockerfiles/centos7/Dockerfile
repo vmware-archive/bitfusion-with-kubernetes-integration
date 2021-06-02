@@ -11,36 +11,6 @@ RUN yum update -y && yum install -y open-vm-tools \
         curl \
 	    kmod
 
-ARG BASE_URL=https://cn.download.nvidia.com/tesla
-ARG DRIVER_VERSION=440.33.01
-ENV DRIVER_VERSION=$DRIVER_VERSION
-
-# ARG BASE_URL=https://us.download.nvidia.com/tesla
-# ARG DRIVER_VERSION=418.87.01
-# ENV SHORT_DRIVER_VERSION=418.87
-
-# Install the userspace components and copy the kernel module sources.
-RUN cd /tmp && \
-    curl -fSslL -O $BASE_URL/$DRIVER_VERSION/NVIDIA-Linux-x86_64-$DRIVER_VERSION.run && \
-    sh NVIDIA-Linux-x86_64-$DRIVER_VERSION.run -x && \
-    cd NVIDIA-Linux-x86_64-$DRIVER_VERSION* && \
-    ./nvidia-installer --silent \
-                       --no-kernel-module \
-                       --install-compat32-libs \
-                       --no-nouveau-check \
-                       --no-nvidia-modprobe \
-                       --no-rpms \
-                       --no-backup \
-                       --no-check-for-alternate-installs \
-                       --no-libglx-indirect \
-                       --no-install-libglvnd \
-                       --x-prefix=/tmp/null \
-                       --x-module-path=/tmp/null \
-                       --x-library-path=/tmp/null \
-                       --x-sysconfig-path=/tmp/null && \
-    rm -rf /tmp/*
-
-
 # Start of CUDA base
 ENV CUDA_VERSION 10.0.130
 ENV CUDA_PKG_VERSION 10-0-$CUDA_VERSION
@@ -81,8 +51,7 @@ RUN yum install -y epel-release
 RUN rpm --import https://packages.vmware.com/bitfusion/vmware.bitfusion.key
 
 RUN cd /tmp && \
-    curl -fSslL -O https://packages.vmware.com/bitfusion/centos/7/bitfusion-client-centos7-2.0.2-4.x86_64.rpm && \
-    yum install -y ./bitfusion-client-centos7-2.0.2-4.x86_64.rpm && \
-    bitfusion list_gpus && \
+    curl -fSslL -O https://packages.vmware.com/bitfusion/centos/7/bitfusion-client-centos7-3.0.0-11.x86_64.rpm && \
+    yum install -y ./bitfusion-client-centos7-3.0.0-11.x86_64.rpm && \
     rm -rf /tmp/*
 
