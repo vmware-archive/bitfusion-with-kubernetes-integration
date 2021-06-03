@@ -28,7 +28,7 @@ data:
       image: container
       env:
       - name: LD_LIBRARY_PATH
-        value:"$LD_LIBRARY_PATH"
+        value: "$LD_LIBRARY_PATH"
       volumeMounts:
       - name: ca
         mountPath: /etc/bitfusion
