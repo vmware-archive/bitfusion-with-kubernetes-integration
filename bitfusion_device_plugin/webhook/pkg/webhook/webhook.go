@@ -302,6 +302,17 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 			glog.Infof("Request gpu with num %v", gpuNum.String())
 			glog.Infof("Request gpu with partial %v", gpuPartial.String())
 
+			for _, v := range target.Command {
+				if strings.ToLower(v) == "/bin/bash" {
+					continue
+				}
+				if strings.ToLower(v) == "-c" {
+					continue
+				}
+
+				command += " " + v
+			}
+
 			cmd := []string{"/bin/bash", "-c", command}
 			target.Command = cmd
 			patches = append(patches, patchOperation{
