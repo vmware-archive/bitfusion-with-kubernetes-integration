@@ -209,11 +209,16 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 }
 
 // addContainer adds container to pod
-func addContainer(target, added []corev1.Container, basePath string) (patch []patchOperation) {
+func addContainer(target, added []corev1.Container, basePath string, bfClientConfig BFClientConfig) (patch []patchOperation) {
 	first := len(target) == 0
 
 	var value interface{}
 	for _, add := range added {
+		index := strings.Index(bfClientConfig.EnvVariable, "/opt/bitfusion")
+		optPath := bfClientConfig.EnvVariable[0:index]
+		// /bin/bash, -c, "command"
+		add.Command[2] = strings.Replace(add.Command[2], "BITFUSION_CLIENT_OPT_PATH", optPath+"/opt/bitfusion/*", 1)
+
 		value = add
 		path := basePath
 		if first {
@@ -424,7 +429,7 @@ func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]
 
 	var err error
 
-	patch = append(patch, addContainer(pod.Spec.InitContainers, sidecarConfig.InitContainers, "/spec/initContainers")...)
+	patch = append(patch, addContainer(pod.Spec.InitContainers, sidecarConfig.InitContainers, "/spec/initContainers", bfClientConfig)...)
 	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
 	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
 	patch = append(patch, updateContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers", bfClientConfig)...)

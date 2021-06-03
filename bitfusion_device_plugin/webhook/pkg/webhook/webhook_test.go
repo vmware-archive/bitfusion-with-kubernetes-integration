@@ -35,15 +35,26 @@ var StaticMemPod corev1.Pod
 var CfgPath = "../../deployment/bitfusion_injector_webhook_configmap.yaml"
 var Cfg corev1.ConfigMap
 
-var vfcfgstr = `initContainers:
-- name: vfinitname
-  image: vfinitimage
-containers:
-- name: vfcontainername
-  image: vfcontainerimage
-volumes:
-- name: vfvolumes
-  emptyDir: {}
+//var vfcfgstr = `initContainers:
+//- name: vfinitname
+//  image: vfinitimage
+//containers:
+//- name: vfcontainername
+//  image: vfcontainerimage
+//volumes:
+//- name: vfvolumes
+//  emptyDir: {}
+//`
+
+var vfcfgstr = `
+initContainers:
+- name: populate
+  image: bitfusiondeviceplugin/bitfusion-client:test
+  command: [/bin/bash, -c, "
+      cp -ra /bitfusion/* /bitfusion-distro/ &&
+      cp /root/.bitfusion/client.yaml /client &&
+      cp -r BITFUSION_CLIENT_OPT_PATH /workload-container-opt
+      "]
 `
 
 var TestSidecarConfig Config
@@ -120,9 +131,11 @@ func TestLoadConfig(t *testing.T) {
 
 func TestAddContainer(t *testing.T) {
 	pod := StaticPod
-	patch := addContainer(pod.Spec.InitContainers, TestSidecarConfig.InitContainers, "/spec/initContainers")
+	bfClientConfig := BFClientConfig{"/bitfusion/bitfusion-client-centos7-2.5.0-10/usr/bin/bitfusion",
+		"/bitfusion/bitfusion-client-centos7-2.5.0-10/opt/bitfusion/2.5.0-fd3e4839/x86_64-linux-gnu/lib/:$LD_LIBRARY_PATH"}
+	patch := addContainer(pod.Spec.InitContainers, TestSidecarConfig.InitContainers, "/spec/initContainers", bfClientConfig)
 	assert.Equal(t, len(patch), 1)
-	patch = addContainer(pod.Spec.Containers, TestSidecarConfig.Containers, "/spec/containers")
+	patch = addContainer(pod.Spec.Containers, TestSidecarConfig.Containers, "/spec/containers", bfClientConfig)
 	assert.Equal(t, len(patch), 1)
 }
 func TestAddVolume(t *testing.T) {
