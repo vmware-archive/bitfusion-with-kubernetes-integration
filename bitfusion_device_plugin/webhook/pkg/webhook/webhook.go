@@ -219,6 +219,7 @@ func addContainer(target, added []corev1.Container, basePath string, bfClientCon
 		// /bin/bash, -c, "command"
 		add.Command[2] = strings.Replace(add.Command[2], "BITFUSION_CLIENT_OPT_PATH", optPath+"/opt/bitfusion/*", 1)
 
+		glog.Infof("Command of InitContainer : %v", add.Command[2])
 		value = add
 		path := basePath
 		if first {
