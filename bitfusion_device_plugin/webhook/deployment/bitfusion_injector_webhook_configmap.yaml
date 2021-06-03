@@ -9,21 +9,26 @@ data:
     - name: populate
       image: bitfusiondeviceplugin/bitfusion-client:test
       command: [/bin/bash, -c, "
-            cp -ra /bitfusion/* /bitfusion-distro/ &&
-            cp /root/.bitfusion/client.yaml /client
-            "]
+          cp -ra /bitfusion/* /bitfusion-distro/ &&
+          cp /root/.bitfusion/client.yaml /client &&
+          cp -r BITFUSION_CLIENT_OPT_PATH /workload-container-opt
+          "]
       volumeMounts:
       - name: bitfusion-distro
         mountPath: /bitfusion-distro
-
       - name: client-dir
         mountPath: /client
       - name: client-from-secret
         mountPath: /root/.bitfusion/client.yaml
         subPath: client.yaml
+      - name: bitfusion-opt
+        mountPath: /workload-container-opt
     containers:
     - name: sidecar-container
       image: container
+      env:
+      - name: LD_LIBRARY_PATH
+        value:"$LD_LIBRARY_PATH"
       volumeMounts:
       - name: ca
         mountPath: /etc/bitfusion
@@ -35,12 +40,15 @@ data:
         subPath: servers.conf
       - name: bitfusion-distro
         mountPath: /bitfusion
+      - name: bitfusion-opt
+        mountPath: /opt/bitfusion
     volumes:
     - name: bitfusion-distro
       emptyDir: {}
+    - name: bitfusion-opt
+      emptyDir: {}
     - name: client-dir
       emptyDir: {}
-
     - name: ca
       secret:
         secretName: bitfusion-secret
