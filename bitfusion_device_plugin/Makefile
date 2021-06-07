@@ -5,7 +5,7 @@ IMAGE_REPO ?= docker.io/bitfusiondeviceplugin
 DEVICE_IMAGE_NAME ?= bitfusion-device-plugin
 WEBHOOK_IMAGE_NAME ?= bitfusion-webhook
 PKG_IMAGE_NAME ?= bitfusion-client
-IMAGE_TAG  ?= 0.1
+IMAGE_TAG  ?= 0.2.1
 K8S_PLATFORM ?= community
 
 export K8S_PLATFORM
@@ -20,12 +20,12 @@ BF_CLIENT_ORIGINAL_NAME := phaedobf/bitfusion-client-ubuntu1804_2.5.0-10_amd64:v
 WEBHOOK_ORIGINAL_NAME := phaedobf/sidecar-injector:v0.1
 
 DEVICE_PLUGIN_YAML_FILE := device-plugin/deployment/device_plugin.yml
-CONFIGMAP_YAML_FILE := webhook/deployment/bitfusion_injector_webhook_configmap.yaml
-WEBHOOK_YAML_FILE := webhook/deployment/bitfusion_injector.yaml
+CONFIGMAP_YAML_FILE := webhook/deployment/bitfusion-injector-webhook-configmap.yaml
+WEBHOOK_YAML_FILE := webhook/deployment/bitfusion-injector.yaml
 
 DEVICE_PLUGIN_YAML_TO_DEPLOY := device-plugin/deployment/deploy_device_plugin.yml
-CONFIGMAP_YAML_TO_DEPLOY := webhook/deployment/deploy_bitfusion_injector_webhook_configmap.yaml
-WEBHOOK_YAML_TO_DEPLOY := webhook/deployment/deploy_bitfusion_injector.yaml
+CONFIGMAP_YAML_TO_DEPLOY := webhook/deployment/deploy-bitfusion-injector-webhook-configmap.yaml
+WEBHOOK_YAML_TO_DEPLOY := webhook/deployment/deploy-bitfusion-injector.yaml
 
 PSP_YAML := device-plugin/deployment/privileged.yaml
 
@@ -52,16 +52,12 @@ build-image:
 	@docker build -t $(IMAGE_REPO)/$(DEVICE_IMAGE_NAME):$(IMAGE_TAG) -f device-plugin/build/Dockerfile .
 	@echo "Building the docker image: $(IMAGE_REPO)/$(WEBHOOK_IMAGE_NAME):$(IMAGE_TAG)..."
 	@docker build -t $(IMAGE_REPO)/$(WEBHOOK_IMAGE_NAME):$(IMAGE_TAG) -f webhook/build/Dockerfile .
-	@echo "Building the docker image: $(IMAGE_REPO)/$(PKG_IMAGE_NAME):$(IMAGE_TAG)..."
-	@docker build -t $(IMAGE_REPO)/$(PKG_IMAGE_NAME):$(IMAGE_TAG) -f webhook/build/Dockerfile-bitfusion-client-ubuntu1804_2.5.0-10_amd64 .
 
 push-image: build-image
 	@echo "Pushing the docker image for $(IMAGE_REPO)/$(DEVICE_IMAGE_NAME):$(IMAGE_TAG) ..."
 	@docker push $(IMAGE_REPO)/$(DEVICE_IMAGE_NAME):$(IMAGE_TAG)
 	@echo "Pushing the docker image for $(IMAGE_REPO)/$(WEBHOOK_IMAGE_NAME):$(IMAGE_TAG) ..."
 	@docker push $(IMAGE_REPO)/$(WEBHOOK_IMAGE_NAME):$(IMAGE_TAG)
-	@echo "Pushing the docker image for $(IMAGE_REPO)/$(PKG_IMAGE_NAME):$(IMAGE_TAG) ..."
-	@docker push $(IMAGE_REPO)/$(PKG_IMAGE_NAME):$(IMAGE_TAG)
 
 ############################################################
 # deploy section

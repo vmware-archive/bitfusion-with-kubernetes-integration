@@ -10,12 +10,14 @@ CRTDIR=$CRTDIR"/webhook"
 echo $CRTDIR
 
 if [ -d $CRTDIR"/deploy" ]; then
-    kubectl delete -f $CRTDIR/deploy/deploy_bitfusion_injector.yaml
-    kubectl delete -f $CRTDIR/deploy/bitfusion_injector_service.yaml
-    kubectl delete -f $CRTDIR/deploy/deploy_bitfusion_injector_webhook_configmap.yaml
-    kubectl delete -f $CRTDIR/deploy/bitfusion_mutating_webhook_configuration.yaml
-    kubectl delete -f $CRTDIR/deploy/bitfusion_service_account.yaml
+    kubectl delete -f $CRTDIR/deploy/deploy-bitfusion-injector.yaml
+    kubectl delete -f $CRTDIR/deploy/bitfusion-injector-service.yaml
+    kubectl delete -f $CRTDIR/deploy/deploy-bitfusion-injector-webhook-configmap.yaml
+    kubectl delete -f $CRTDIR/deploy/bitfusion-mutating-webhook-configuration.yaml
+    kubectl delete -f $CRTDIR/deploy/bitfusion-service-account.yaml
     kubectl delete -f $CRTDIR/deploy/bitfusion_validating_webhook_configuration.yaml
+    kubectl delete -f $CRTDIR/deploy/bitfusion-client-configmap.yaml
+    kubectl delete -f $CRTDIR/deploy/bitfusion-client-info-configmap.yaml
 fi
 
 # Copy deployment
@@ -40,22 +42,23 @@ else
         --namespace "${WEBHOOK_NAMESPACE}"
 fi
 
-cat $CRTDIR/deploy/bitfusion_mutating_webhook_configuration.yaml | \
+cat $CRTDIR/deploy/bitfusion-mutating-webhook-configuration.yaml | \
     $CRTDIR/deploy/webhook-patch-ca-bundle.sh > \
     $CRTDIR/deploy/mutatingwebhook-ca-bundle.yaml
 
-cat $CRTDIR/deploy/bitfusion_validating_webhook_configuration.yaml | \
+cat $CRTDIR/deploy/bitfusion-validating-webhook-configuration.yaml | \
     $CRTDIR/deploy/webhook-patch-ca-bundle.sh > \
     $CRTDIR/deploy/validationwebhook-ca-bundle.yaml
 
 
-kubectl apply -f $CRTDIR/deploy/deploy_bitfusion_injector.yaml
-kubectl apply -f $CRTDIR/deploy/bitfusion_injector_service.yaml
-kubectl apply -f $CRTDIR/deploy/deploy_bitfusion_injector_webhook_configmap.yaml
-kubectl apply -f $CRTDIR/deploy/bitfusion_service_account.yaml
-kubectl apply -f $CRTDIR/deploy/validationwebhook-ca-bundle.yaml
-kubectl apply -f $CRTDIR/deploy/mutatingwebhook-ca-bundle.yaml
-
+kubectl create -f $CRTDIR/deploy/deploy-bitfusion-injector.yaml
+kubectl create -f $CRTDIR/deploy/bitfusion-injector-service.yaml
+kubectl create -f $CRTDIR/deploy/deploy-bitfusion-injector-webhook-configmap.yaml
+kubectl create -f $CRTDIR/deploy/bitfusion-service-account.yaml
+kubectl create -f $CRTDIR/deploy/validationwebhook-ca-bundle.yaml
+kubectl create -f $CRTDIR/deploy/mutatingwebhook-ca-bundle.yaml
+kubectl create -f $CRTDIR/deploy/bitfusion-client-configmap.yaml
+kubectl create -f $CRTDIR/deploy/bitfusion-client-info-configmap.yaml
 
 
 
