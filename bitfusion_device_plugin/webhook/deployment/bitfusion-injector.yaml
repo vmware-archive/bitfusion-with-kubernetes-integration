@@ -19,8 +19,6 @@ spec:
         - name: bwki
           image: phaedobf/sidecar-injector:v0.1
           imagePullPolicy: IfNotPresent
-          env:
-
           args:
           - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml
           - -bitfusionClientConfig=/etc/webhook/bitfusion-client-config/bitfusion-client-config.yaml
