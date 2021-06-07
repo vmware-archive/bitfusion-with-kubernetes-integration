@@ -9,7 +9,9 @@ package webhook
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"reflect"
 
 	"log"
 	"net/http"
@@ -30,18 +32,29 @@ var PodPath = "../../../example/pod.yaml"
 var MemPodPath = "../../../example/pod-memory.yaml"
 var StaticPod corev1.Pod
 var StaticMemPod corev1.Pod
-var CfgPath = "../../deployment/configmap.yaml"
+var CfgPath = "../../deployment/bitfusion_injector_webhook_configmap.yaml"
 var Cfg corev1.ConfigMap
 
-var vfcfgstr = `initContainers:
-- name: vfinitname
-  image: vfinitimage
-containers:
-- name: vfcontainername
-  image: vfcontainerimage
-volumes:
-- name: vfvolumes
-  emptyDir: {}
+//var vfcfgstr = `initContainers:
+//- name: vfinitname
+//  image: vfinitimage
+//containers:
+//- name: vfcontainername
+//  image: vfcontainerimage
+//volumes:
+//- name: vfvolumes
+//  emptyDir: {}
+//`
+
+var vfcfgstr = `
+initContainers:
+- name: populate
+  image: bitfusiondeviceplugin/bitfusion-client:test
+  command: [/bin/bash, -c, "
+      cp -ra /bitfusion/* /bitfusion-distro/ &&
+      cp /root/.bitfusion/client.yaml /client &&
+      cp -r BITFUSION_CLIENT_OPT_PATH /workload-container-opt
+      "]
 `
 
 var TestSidecarConfig Config
@@ -118,9 +131,11 @@ func TestLoadConfig(t *testing.T) {
 
 func TestAddContainer(t *testing.T) {
 	pod := StaticPod
-	patch := addContainer(pod.Spec.InitContainers, TestSidecarConfig.InitContainers, "/spec/initContainers")
+	bfClientConfig := BFClientConfig{"/bitfusion/bitfusion-client-centos7-2.5.0-10/usr/bin/bitfusion",
+		"/bitfusion/bitfusion-client-centos7-2.5.0-10/opt/bitfusion/2.5.0-fd3e4839/x86_64-linux-gnu/lib/:$LD_LIBRARY_PATH"}
+	patch := addContainer(pod.Spec.InitContainers, TestSidecarConfig.InitContainers, "/spec/initContainers", bfClientConfig)
 	assert.Equal(t, len(patch), 1)
-	patch = addContainer(pod.Spec.Containers, TestSidecarConfig.Containers, "/spec/containers")
+	patch = addContainer(pod.Spec.Containers, TestSidecarConfig.Containers, "/spec/containers", bfClientConfig)
 	assert.Equal(t, len(patch), 1)
 }
 func TestAddVolume(t *testing.T) {
@@ -143,10 +158,14 @@ func TestUpdateAnnotation(t *testing.T) {
 func TestCreatePatch(t *testing.T) {
 	pod := StaticPod
 	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
-	_, err := createPatch(&pod, &TestSidecarConfig, annotations)
+	bfClientConfig := BFClientConfig{"/bitfusion/bitfusion-client-centos7-2.5.0-10/usr/bin/bitfusion",
+		"/bitfusion/bitfusion-client-centos7-2.5.0-10/opt/bitfusion/2.5.0-fd3e4839/x86_64-linux-gnu/lib/:$LD_LIBRARY_PATH"}
+	bytes, err := createPatch(&pod, &TestSidecarConfig, annotations, bfClientConfig)
+	fmt.Print(bytes)
 	assert.Equal(t, err, nil)
 	mpod := StaticMemPod
-	_, err = createPatch(&mpod, &TestSidecarConfig, annotations)
+	bytes, err = createPatch(&mpod, &TestSidecarConfig, annotations, bfClientConfig)
+	fmt.Print(bytes)
 	assert.Equal(t, err, nil)
 
 }
@@ -262,8 +281,9 @@ func TestUpdateBFResource(t *testing.T) {
 
 		verifyList = append(verifyList, gpuNum.Value()*gpuPartial.Value())
 	}
-
-	patchs, err := updateBFResource(testPod.Spec.Containers, "spec/containers")
+	bfClientConfig := BFClientConfig{"/bitfusion/bitfusion-client-centos7-2.5.0-10/usr/bin/bitfusion",
+		"/bitfusion/bitfusion-client-centos7-2.5.0-10/opt/bitfusion/2.5.0-fd3e4839/x86_64-linux-gnu/lib/:$LD_LIBRARY_PATH"}
+	patchs, err := updateBFResource(testPod.Spec.Containers, "spec/containers", bfClientConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,7 +305,36 @@ func TestUpdateBFResource(t *testing.T) {
 	p := testPod.Spec.Containers[0].Resources.Requests[bitFusionGPUResourcePartial]
 	p.Set(101)
 	testPod.Spec.Containers[0].Resources.Requests[bitFusionGPUResourcePartial] = p
-	_, err = updateBFResource(testPod.Spec.Containers, "spec/containers")
+	_, err = updateBFResource(testPod.Spec.Containers, "spec/containers", bfClientConfig)
 	t.Log(err)
 
+}
+
+func TestConstructBitfusionDistroMap(t *testing.T) {
+	type args struct {
+		configFile string
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		want    *map[interface{}]interface{}
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{name: "1", args: args{configFile: "./bitfusion-client-configmap.yaml"},
+			want: nil, wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ConstructBitfusionDistroInfo(tt.args.configFile)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ConstructBitfusionDistroInfo() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ConstructBitfusionDistroInfo() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

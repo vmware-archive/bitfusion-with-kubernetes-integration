@@ -18,6 +18,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
+	yamlv2 "gopkg.in/yaml.v2"
 	"k8s.io/api/admission/v1beta1"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -37,6 +38,8 @@ var (
 
 	defaulter    = runtime.ObjectDefaulter(runtimeScheme)
 	zeroQuantity = resource.Quantity{}
+
+	BitfusionClientMap *map[string]map[string]BFClientConfig
 )
 
 var ignoredNamespaces = []string{
@@ -47,6 +50,8 @@ var ignoredNamespaces = []string{
 const (
 	admissionWebhookAnnotationInjectKey = "auto-management/bitfusion"
 	admissionWebhookAnnotationStatusKey = "auto-management/status"
+	guestOS                             = "bitfusion-client/os"
+	bfVersion                           = "bitfusion-client/version"
 	// "~1" is used for escape (http://jsonpatch.com/)
 	bitFusionGPUResource              = "bitfusion.io/gpu"
 	bitFusionGPUResourceNum           = "bitfusion.io/gpu-num"
@@ -65,10 +70,11 @@ type WebhookServer struct {
 
 // Webhook Server parameters
 type WhSvrParameters struct {
-	Port           int    // webhook server port
-	CertFile       string // path to the x509 certificate for https
-	KeyFile        string // path to the x509 private key matching `CertFile`
-	SidecarCfgFile string // path to sidecar injector configuration file
+	Port                  int    // webhook server port
+	CertFile              string // path to the x509 certificate for https
+	KeyFile               string // path to the x509 private key matching `CertFile`
+	SidecarCfgFile        string // path to sidecar injector configuration file
+	BitfusionClientConfig string // path to Bitfusion client configuration file
 }
 
 // Config struct
@@ -76,6 +82,25 @@ type Config struct {
 	InitContainers []corev1.Container `yaml:"initContainers"`
 	Containers     []corev1.Container `yaml:"containers"`
 	Volumes        []corev1.Volume    `yaml:"volumes"`
+}
+
+// Bitfusion client binary path and environment variables value of LD_LIBRARY_PATH
+type BFClientConfig struct {
+	BinaryPath  string
+	EnvVariable string
+}
+
+// BitfusionClients configuration for each Bitfusion client in different OS
+type BitfusionClients struct {
+	BitfusionVersion string `yaml:"BitfusionVersion"`
+	OSVersion        string `yaml:"OSVersion"`
+	BinaryPath       string `yaml:"BinaryPath"`
+	EnvVariable      string `yaml:"EnvVariable"`
+}
+
+// BitfusionClientDistro struct
+type BitfusionClientDistro struct {
+	BitfusionClients []BitfusionClients `yaml:"BitfusionClients"`
 }
 
 // patchOperation Update field(s) of a resource using strategic merge patch.
@@ -115,6 +140,40 @@ func LoadConfig(configFile string) (*Config, error) {
 	return &cfg, nil
 }
 
+func ConstructBitfusionDistroInfo(configFile string) (*BitfusionClientDistro, error) {
+	data, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return nil, err
+	}
+	glog.Infof("New configuration: sha256sum %x", sha256.Sum256(data))
+
+	var result BitfusionClientDistro
+
+	if err := yamlv2.Unmarshal(data, &result); err != nil {
+		// error handling
+		return nil, err
+	}
+	return &result, nil
+}
+
+func getGuestOS(metadata *metav1.ObjectMeta) string {
+	annotations := metadata.GetAnnotations()
+	if annotations != nil {
+		os := annotations[guestOS]
+		return os
+	}
+	return ""
+}
+
+func getBfVersion(metadata *metav1.ObjectMeta) string {
+	annotations := metadata.GetAnnotations()
+	if annotations != nil {
+		bfVer := annotations[bfVersion]
+		return bfVer
+	}
+	return ""
+}
+
 // mutationRequired checks whether the target resource need to be mutated
 func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 	// Skip special kubernetes system namespaces
@@ -150,11 +209,17 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 }
 
 // addContainer adds container to pod
-func addContainer(target, added []corev1.Container, basePath string) (patch []patchOperation) {
+func addContainer(target, added []corev1.Container, basePath string, bfClientConfig BFClientConfig) (patch []patchOperation) {
 	first := len(target) == 0
 
 	var value interface{}
 	for _, add := range added {
+		index := strings.Index(bfClientConfig.EnvVariable, "/opt/bitfusion")
+		optPath := bfClientConfig.EnvVariable[0:index]
+		// /bin/bash, -c, "command"
+		add.Command[2] = strings.Replace(add.Command[2], "BITFUSION_CLIENT_OPT_PATH", optPath+"/opt/bitfusion/*", 1)
+
+		glog.Infof("Command of InitContainer : %v", add.Command[2])
 		value = add
 		path := basePath
 		if first {
@@ -173,7 +238,7 @@ func addContainer(target, added []corev1.Container, basePath string) (patch []pa
 }
 
 // updateBFResource updates resource name and change container's cmd to add Bitfusion
-func updateBFResource(targets []corev1.Container, basePath string) (patches []patchOperation, e error) {
+func updateBFResource(targets []corev1.Container, basePath string, bfClientConfig BFClientConfig) (patches []patchOperation, e error) {
 	if len(targets) == 0 {
 		return patches, nil
 	}
@@ -182,10 +247,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 		if len(target.Command) != 0 {
 
 			// Check bitFusionGPUResourceNum
-			gpuNum, has := target.Resources.Requests[bitFusionGPUResourceNum]
-			if !has {
-				return patches, fmt.Errorf("No gpu num request ")
-			}
+			gpuNum := target.Resources.Requests[bitFusionGPUResourceNum]
 
 			// Check bitFusionGPUResourcePartial and set fallback
 			gpuPartial := target.Resources.Requests[bitFusionGPUResourcePartial]
@@ -223,8 +285,8 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 			if gpuMemory != zeroQuantity {
 				m, ok := gpuMemory.AsInt64()
 				if ok {
-
-					command = fmt.Sprintf("bitfusion run -n %s -m %d", gpuNum.String(), m)
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
+					//command = fmt.Sprintf("bitfusion run -n %s -m %d", gpuNum.String(), m)
 					patches = append(patches, patchOperation{
 						Op:   "remove",
 						Path: basePath + "/" + strconv.Itoa(i) + "/resources/requests/" + bitFusionGPUResourceMemoryEscape,
@@ -235,14 +297,13 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 
 				}
 			} else {
-				command = fmt.Sprintf("bitfusion run -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
+				command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
+				//command = fmt.Sprintf("bitfusion run -n %s -p %f", gpuNum.String(), float64(gpuPartialNum)/100.0)
 			}
 			glog.Infof("Request gpu with num %v", gpuNum.String())
 			glog.Infof("Request gpu with partial %v", gpuPartial.String())
 
-			hasPrefix := false
 			for _, v := range target.Command {
-
 				if strings.ToLower(v) == "/bin/bash" {
 					continue
 				}
@@ -250,23 +311,16 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 					continue
 				}
 
-				str := strings.TrimSpace(v)
-				if strings.HasPrefix(str, "bitfusion") {
-					hasPrefix = true
-				}
-
 				command += " " + v
+			}
 
-			}
-			if !hasPrefix {
-				cmd := []string{"/bin/bash", "-c", command}
-				target.Command = cmd
-				patches = append(patches, patchOperation{
-					Op:    "replace",
-					Path:  basePath + "/" + strconv.Itoa(i) + "/command",
-					Value: cmd,
-				})
-			}
+			cmd := []string{"/bin/bash", "-c", command}
+			target.Command = cmd
+			patches = append(patches, patchOperation{
+				Op:    "replace",
+				Path:  basePath + "/" + strconv.Itoa(i) + "/command",
+				Value: cmd,
+			})
 
 			// Construct bitFusionGPUResource
 			// Remove legacy
@@ -303,7 +357,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 }
 
 // updateContainer updates env and volume to container
-func updateContainer(targets, source []corev1.Container, basePath string) (patches []patchOperation) {
+func updateContainer(targets, source []corev1.Container, basePath string, bfClientConfig BFClientConfig) (patches []patchOperation) {
 
 	for i, container := range targets {
 		if container.Resources.Requests[bitFusionGPUResourceNum] == zeroQuantity {
@@ -319,7 +373,11 @@ func updateContainer(targets, source []corev1.Container, basePath string) (patch
 			Value: container.VolumeMounts,
 		})
 
-		container.Env = append(container.Env, source[0].Env...)
+		//container.Env = append(container.Env, source[0].Env...)
+		env := corev1.EnvVar{Name: "LD_LIBRARY_PATH", Value: bfClientConfig.EnvVariable}
+		container.Env = append(container.Env, env)
+		//env = corev1.EnvVar{Name: "PATH", Value: bfClientConfig.BinaryPath + ":$PATH"}
+		//container.Env = append(container.Env, env)
 		patches = append(patches, patchOperation{
 			Op:    "replace",
 			Path:  fmt.Sprintf("%s/%d/env", basePath, i),
@@ -378,17 +436,21 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 }
 
 // createPatch creates mutation patch for resource
-func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]string) ([]byte, error) {
+func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]string, bfClientConfig BFClientConfig) ([]byte, error) {
 	var patch []patchOperation
 
 	var err error
 
-	patch = append(patch, addContainer(pod.Spec.InitContainers, sidecarConfig.InitContainers, "/spec/initContainers")...)
+	patch = append(patch, addContainer(pod.Spec.InitContainers, sidecarConfig.InitContainers, "/spec/initContainers", bfClientConfig)...)
 	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
 	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
-	patch = append(patch, updateContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers")...)
+	patch = append(patch, updateContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers", bfClientConfig)...)
 
-	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers")
+	glog.Infof("sidecarConfig: %v", sidecarConfig.InitContainers)
+	glog.Infof("sidecarConfig.Containers: %v", sidecarConfig.Containers[0].VolumeMounts)
+	glog.Infof("patch: %v", patch)
+
+	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers", bfClientConfig)
 	if err != nil {
 		glog.Errorf("Unable to create json patch for bitfusion resource")
 		return nil, err
@@ -408,13 +470,12 @@ func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]
 func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
 	var pod corev1.Pod
+	response := &v1beta1.AdmissionResponse{}
+
 	if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
 		glog.Errorf("Could not unmarshal raw object: %v", err)
-		return &v1beta1.AdmissionResponse{
-			Result: &metav1.Status{
-				Message: err.Error(),
-			},
-		}
+		response.Result = &metav1.Status{Message: err.Error()}
+		return response
 	}
 
 	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v (%v) UID=%v patchOperation=%v UserInfo=%v",
@@ -423,39 +484,47 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 	// Determine whether to perform mutation
 	if !mutationRequired(ignoredNamespaces, &pod.ObjectMeta) {
 		glog.Infof("Skipping mutation for %s/%s due to policy check", pod.Namespace, pod.Name)
-		return &v1beta1.AdmissionResponse{
-			Allowed: true,
+		response.Allowed = true
+		return response
+	}
+
+	// If user did not specify the GuestOS annotation, webhook will do nothing with the container
+	os := getGuestOS(&pod.ObjectMeta)
+	bfVersion := getBfVersion(&pod.ObjectMeta)
+	clientMap := *BitfusionClientMap
+	if os == "" || bfVersion == "" {
+		response.Allowed = true
+		return response
+	} else {
+		if _, ok := clientMap[os][bfVersion]; !ok {
+			glog.Errorf("Could not find Bitfusion client info, OS=%v BFVersion=%v", os, bfVersion)
+			response.Result = &metav1.Status{Message: "Could not find Bitfusion client info"}
+			return response
 		}
 	}
 
 	applyDefaultsWorkaround(whsvr.SidecarConfig.Containers, whsvr.SidecarConfig.Volumes)
 	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
-	patchBytes, err := createPatch(&pod, whsvr.SidecarConfig, annotations)
+	patchBytes, err := createPatch(&pod, whsvr.SidecarConfig, annotations, clientMap[os][bfVersion])
 	if err != nil {
-		return &v1beta1.AdmissionResponse{
-			Result: &metav1.Status{
-				Message: err.Error(),
-			},
-		}
+		response.Result = &metav1.Status{Message: err.Error()}
+		return response
 	}
 
 	if err = CopySecret(&req.Namespace); err != nil {
 		glog.Errorf("Can't copy secret: %v", err)
-		return &v1beta1.AdmissionResponse{
-			Result: &metav1.Status{
-				Message: err.Error(),
-			},
-		}
+		response.Result = &metav1.Status{Message: err.Error()}
+		return response
 	}
 
-	return &v1beta1.AdmissionResponse{
-		Allowed: true,
-		Patch:   patchBytes,
-		PatchType: func() *v1beta1.PatchType {
-			pt := v1beta1.PatchTypeJSONPatch
-			return &pt
-		}(),
-	}
+	response.Allowed = true
+	response.Patch = patchBytes
+	response.PatchType = func() *v1beta1.PatchType {
+		pt := v1beta1.PatchTypeJSONPatch
+		return &pt
+	}()
+
+	return response
 }
 
 // Serve method for webhook server
