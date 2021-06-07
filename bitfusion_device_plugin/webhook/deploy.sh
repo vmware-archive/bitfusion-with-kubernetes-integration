@@ -15,7 +15,7 @@ if [ -d $CRTDIR"/deploy" ]; then
     kubectl delete -f $CRTDIR/deploy/deploy-bitfusion-injector-webhook-configmap.yaml
     kubectl delete -f $CRTDIR/deploy/bitfusion-mutating-webhook-configuration.yaml
     kubectl delete -f $CRTDIR/deploy/bitfusion-service-account.yaml
-    kubectl delete -f $CRTDIR/deploy/bitfusion_validating_webhook_configuration.yaml
+    kubectl delete -f $CRTDIR/deploy/bitfusion-validating-webhook-configuration.yaml
     kubectl delete -f $CRTDIR/deploy/bitfusion-client-configmap.yaml
     kubectl delete -f $CRTDIR/deploy/bitfusion-client-info-configmap.yaml
 fi
