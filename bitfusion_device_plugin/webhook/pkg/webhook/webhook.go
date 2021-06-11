@@ -69,10 +69,11 @@ type WebhookServer struct {
 
 // Webhook Server parameters
 type WhSvrParameters struct {
-	Port           int    // webhook server port
-	CertFile       string // path to the x509 certificate for https
-	KeyFile        string // path to the x509 private key matching `CertFile`
-	SidecarCfgFile string // path to sidecar injector configuration file
+	Port                  int    // webhook server port
+	CertFile              string // path to the x509 certificate for https
+	KeyFile               string // path to the x509 private key matching `CertFile`
+	SidecarCfgFile        string // path to sidecar injector configuration file
+	BitfusionClientConfig string // path to Bitfusion client configuration file
 }
 
 // Config struct
