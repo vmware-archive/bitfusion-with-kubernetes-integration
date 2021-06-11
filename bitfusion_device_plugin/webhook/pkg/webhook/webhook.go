@@ -49,6 +49,8 @@ var ignoredNamespaces = []string{
 }
 
 const (
+	guestOS                             = "bitfusion-client/os"
+	bfVersion                           = "bitfusion-client/version"
 	admissionWebhookAnnotationInjectKey = "auto-management/bitfusion"
 	admissionWebhookAnnotationStatusKey = "auto-management/status"
 	// "~1" is used for escape (http://jsonpatch.com/)
@@ -154,31 +156,8 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 	return required
 }
 
-// addContainer adds container to pod
-func addContainer(target, added []corev1.Container, basePath string) (patch []patchOperation) {
-	first := len(target) == 0
-
-	var value interface{}
-	for _, add := range added {
-		value = add
-		path := basePath
-		if first {
-			first = false
-			value = []corev1.Container{add}
-		} else {
-			path = path + "/-"
-		}
-		patch = append(patch, patchOperation{
-			Op:    "add",
-			Path:  path,
-			Value: value,
-		})
-	}
-	return patch
-}
-
 // updateBFResource updates resource name and change container's cmd to add Bitfusion
-func updateBFResource(targets []corev1.Container, basePath string) (patches []patchOperation, e error) {
+func updateBFResource(targets []corev1.Container, basePath string, bfClientConfig BFClientConfig) (patches []patchOperation, e error) {
 	if len(targets) == 0 {
 		return patches, nil
 	}
@@ -234,7 +213,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 						glog.Error("Memory value Error")
 						return patches, fmt.Errorf("Memory value Error ")
 					}
-					command = fmt.Sprintf("bitfusion run -n %s -m %d", gpuNum.String(), m)
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
 					delete(target.Resources.Requests, bitFusionGPUResourceMemory)
 					delete(target.Resources.Limits, bitFusionGPUResourceMemory)
 				} else {
@@ -243,7 +222,7 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 
 				}
 			} else {
-				command = fmt.Sprintf("bitfusion run -n %d -p %f", gpuNum.Value(), float64(gpuPartialNum)/100.0)
+				command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f", gpuNum.Value(), float64(gpuPartialNum)/100.0)
 			}
 			glog.Infof("Request gpu with num %v", gpuNum.Value())
 			glog.Infof("Request gpu with partial %v", gpuPartial.Value())
@@ -307,36 +286,6 @@ func updateBFResource(targets []corev1.Container, basePath string) (patches []pa
 		}
 	}
 	return patches, nil
-}
-
-// updateContainer updates env and volume to container
-func updateContainer(targets, source []corev1.Container, basePath string) (patches []patchOperation) {
-
-	for i, container := range targets {
-		if container.Resources.Requests[bitFusionGPUResourceNum] == zeroQuantity {
-			// Pass if no Bitfusion resource was required
-			// It will fail on next step if only gpu-percent was provided
-			continue
-		}
-
-		container.VolumeMounts = append(container.VolumeMounts, source[0].VolumeMounts...)
-		patches = append(patches, patchOperation{
-			Op:    "replace",
-			Path:  fmt.Sprintf("%s/%d/volumeMounts", basePath, i),
-			Value: container.VolumeMounts,
-		})
-
-		container.Env = append(container.Env, source[0].Env...)
-		patches = append(patches, patchOperation{
-			Op:    "replace",
-			Path:  fmt.Sprintf("%s/%d/env", basePath, i),
-			Value: container.Env,
-		})
-
-		targets[0] = container
-
-	}
-	return patches
 }
 
 // addVolume adds volume to pod
@@ -447,87 +396,6 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 		glog.Infof("container.Resources.Requests  == %v", added[i].Resources.Requests)
 	}
 	return added
-}
-
-// createPatch creates mutation patch for resource
-func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]string) ([]byte, error) {
-	var patch []patchOperation
-	var err error
-	initContainers := updateInitContainersResources(pod.Spec.Containers, sidecarConfig.InitContainers)
-	patch = append(patch, addContainer(pod.Spec.InitContainers, initContainers, "/spec/initContainers")...)
-	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
-	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
-	patch = append(patch, updateContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers")...)
-
-	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers")
-	if err != nil {
-		glog.Errorf("Unable to create json patch for bitfusion resource")
-		return nil, err
-	}
-
-	patch = append(patch, bfPatch...)
-
-	patchByte, err := json.Marshal(patch)
-	if err != nil {
-		return nil, err
-	}
-
-	return patchByte, nil
-}
-
-// mutate is main mutation process
-func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
-	req := ar.Request
-	var pod corev1.Pod
-	if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
-		glog.Errorf("Could not unmarshal raw object: %v", err)
-		return &v1beta1.AdmissionResponse{
-			Result: &metav1.Status{
-				Message: err.Error(),
-			},
-		}
-	}
-
-	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v (%v) UID=%v patchOperation=%v UserInfo=%v",
-		req.Kind, req.Namespace, req.Name, pod.Name, req.UID, req.Operation, req.UserInfo)
-
-	// Determine whether to perform mutation
-	injectionStatus = ""
-	if !mutationRequired(ignoredNamespaces, &pod.ObjectMeta) {
-		glog.Infof("Skipping mutation for %s/%s due to policy check", pod.Namespace, pod.Name)
-		return &v1beta1.AdmissionResponse{
-			Allowed: true,
-		}
-	}
-
-	applyDefaultsWorkaround(whsvr.SidecarConfig.Containers, whsvr.SidecarConfig.Volumes)
-	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
-	patchBytes, err := createPatch(&pod, whsvr.SidecarConfig, annotations)
-	if err != nil {
-		return &v1beta1.AdmissionResponse{
-			Result: &metav1.Status{
-				Message: err.Error(),
-			},
-		}
-	}
-
-	if err = CopySecret(&req.Namespace); err != nil {
-		glog.Errorf("Can't copy secret: %v", err)
-		return &v1beta1.AdmissionResponse{
-			Result: &metav1.Status{
-				Message: err.Error(),
-			},
-		}
-	}
-
-	return &v1beta1.AdmissionResponse{
-		Allowed: true,
-		Patch:   patchBytes,
-		PatchType: func() *v1beta1.PatchType {
-			pt := v1beta1.PatchTypeJSONPatch
-			return &pt
-		}(),
-	}
 }
 
 // Serve method for webhook server

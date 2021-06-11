@@ -199,14 +199,13 @@ bwki-webhook-svc              ClusterIP   10.101.39.4   <none>        443/TCP   
 After completing the installation, users can write a YAML file of Kubernetes to consume the Bitfusion resources. There are three parameters related to Bitfusion resource in a YAML file:  
 - auto-management/bitfusion: yes / no / only-injection 
   Use this annotation to describe whether Bitfusion device plugin is enabled for this workload.  
-  - yes: 注入Bitfusion依赖和Baremetal Token，并在container的command内容前增加bitfusion前缀
-  - no: 不对pod执行任何操作
-  - only-injection: 只注入Bitfusion依赖和Baremetal Token
+  - yes: Injecting a Bitfusion dependency and BareMetal Token and adding the Bitfusion prefix to the content of the Container's command
+  - no: Do nothing to POD
+  - only-injection: Only Bitfusion dependencies and BareMetal tokens are injected
 - bitfusion.io/gpu-num:  
-  Number of GPU the workload requires from the Bitfusion cluster, 请使用大于0的整数，如果填写小数则会向上取整
+  Number of GPU the workload requires from the Bitfusion cluster, Please use integers greater than 0. If you enter a decimal, it will be rounded up
 - bitfusion.io/gpu-percent:  
-  Percentage of the memory of each GPU ,取值范围为1-100之间的整数
-- bitfusion.io/gpu-memory:
+  Percentage of the memory of each GPU ,An integer with values ranging from 1 to 100
 
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
 
