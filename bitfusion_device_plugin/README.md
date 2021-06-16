@@ -216,6 +216,8 @@ metadata:
   annotations:
     # "yes" stands for Bitfusion device plugin is enabled for this Pod.
     auto-management/bitfusion: "yes"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "250"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
