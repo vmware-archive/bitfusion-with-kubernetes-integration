@@ -201,9 +201,11 @@ After completing the installation, users can write a YAML file of Kubernetes to 
   Use this annotation to describe whether Bitfusion device plugin is enabled for this workload.  
   - yes: Injecting a Bitfusion dependency and BareMetal Token and adding the Bitfusion prefix to the content of the Container's command
   - no: Do nothing to POD
+  - only-injection: Only Bitfusion dependencies and BareMetal tokens are injected
 - bitfusion.io/gpu-num:  
-  Number of GPU the workload requires from the Bitfusion cluster
+  Number of GPU the workload requires from the Bitfusion cluster, Please use integers greater than 0. If you enter a decimal, it will be rounded up
 - bitfusion.io/gpu-percent:  
+  Percentage of the memory of each GPU ,An integer with values ranging from 1 to 100
 
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
 
@@ -214,6 +216,8 @@ metadata:
   annotations:
     # "yes" stands for Bitfusion device plugin is enabled for this Pod.
     auto-management/bitfusion: "yes"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "250"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark

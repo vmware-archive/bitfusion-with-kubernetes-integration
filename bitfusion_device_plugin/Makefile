@@ -47,7 +47,7 @@ endif
 
 image: build-image push-image
 
-build-image: 
+build-image:
 	@echo "Building the docker image: $(IMAGE_REPO)/$(DEVICE_IMAGE_NAME):$(IMAGE_TAG)..."
 	@docker build -t $(IMAGE_REPO)/$(DEVICE_IMAGE_NAME):$(IMAGE_TAG) -f device-plugin/build/Dockerfile .
 	@echo "Building the docker image: $(IMAGE_REPO)/$(WEBHOOK_IMAGE_NAME):$(IMAGE_TAG)..."
@@ -63,7 +63,7 @@ push-image: build-image
 # deploy section
 ############################################################
 
-deploy: update create 
+deploy: update create
 
 update:
 	@echo "Create file $(DEVICE_PLUGIN_YAML_TO_DEPLOY) by $(DEVICE_PLUGIN_YAML_FILE): rewrite $(DEVICE_PLUGIN_ORIGINAL_NAME) to $(IMAGE_REPO)/$(DEVICE_IMAGE_NAME):$(IMAGE_TAG) ..."

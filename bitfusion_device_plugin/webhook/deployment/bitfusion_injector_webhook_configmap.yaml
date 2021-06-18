@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bwki-webhook-configmap
+  namespace: bwki
+data:
+  sidecarconfig.yaml: |
+    initContainers:
+    - name: populate
+      image: bitfusiondeviceplugin/bitfusion-client:test
+      command: [/bin/bash, -c, "
+          cp -ra /bitfusion/* /bitfusion-distro/ &&
+          cp /root/.bitfusion/client.yaml /client &&
+          cp -r BITFUSION_CLIENT_OPT_PATH /workload-container-opt
+          "]
+      volumeMounts:
+      - name: bitfusion-distro
+        mountPath: /bitfusion-distro
+      - name: client-dir
+        mountPath: /client
+      - name: client-from-secret
+        mountPath: /root/.bitfusion/client.yaml
+        subPath: client.yaml
+      - name: bitfusion-opt
+        mountPath: /workload-container-opt
+    containers:
+    - name: sidecar-container
+      image: container
+      env:
+      - name: LD_LIBRARY_PATH
+        value: "$LD_LIBRARY_PATH"
+      volumeMounts:
+      - name: ca
+        mountPath: /etc/bitfusion
+      - name: client-dir
+        mountPath: /root/.bitfusion/client.yaml
+        subPath: client.yaml
+      - name: servers-from-secret
+        mountPath: /root/.bitfusion/servers.conf
+        subPath: servers.conf
+      - name: bitfusion-distro
+        mountPath: /bitfusion
+      - name: bitfusion-opt
+        mountPath: /opt/bitfusion
+    volumes:
+    - name: bitfusion-distro
+      emptyDir: {}
+    - name: bitfusion-opt
+      emptyDir: {}
+    - name: client-dir
+      emptyDir: {}
+    - name: ca
+      secret:
+        secretName: bitfusion-secret
+        items:
+          - key: ca.crt
+            path: tls/ca.crt
+    - name: client-from-secret
+      secret:
+        secretName: bitfusion-secret
+        items:
+          - key: client.yaml
+            path: client.yaml
+            mode: 0600
+    - name: servers-from-secret
+      secret:
+        secretName: bitfusion-secret
+        items:
+          - key: servers.conf
+            path: servers.conf
