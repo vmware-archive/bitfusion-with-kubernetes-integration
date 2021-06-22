@@ -253,7 +253,7 @@ After completing the installation, users can write a YAML file of Kubernetes to 
  - bitfusion.io/gpu-memory: The default unit is b. It can be used with the K8s native memory application unit (Mi,M,G,Gi). It cannot be used with the bitfusion.io/gpu-percent parameters, if used together, the bitfusion.io/gpu-percent parameters will be ignored.
  - bitfusion-client/os: Need to inject bitfusion client version, currently only support  [ubuntu18 ubuntu20, centos7, centos8 ) four system version
  - bitfusion-client/version:Need to inject bitfusion client version number, 250, said version 2.5, and currently only supports the 2.5 version of the injection
- - 
+ 
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
 
 ###option 1###
@@ -307,7 +307,9 @@ Apply the yaml with the following command to deploy:
 $ kubectl create namespace tensorflow-benchmark
 $ kubectl create -f example/pod-memory.yaml
 ```
-在resources/limits中使用bitfusion.io/gpu-memory
+
+Using bitfusion.io/gpu-memory in resources/limits
+
 ```yaml
 apiVersion: v1
 kind: Pod
