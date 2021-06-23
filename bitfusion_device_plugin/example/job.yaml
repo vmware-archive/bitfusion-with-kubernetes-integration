@@ -20,7 +20,7 @@ spec:
           command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
           resources:
             limits:
-              bitfusion.io/gpu-num: 1
+              bitfusion.io/gpu-amount: 1
               bitfusion.io/gpu-percent: 25
           volumeMounts:
             - name: code

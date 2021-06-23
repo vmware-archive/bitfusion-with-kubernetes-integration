@@ -265,8 +265,8 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 	return added
 }
 
-// CopySecret copies a secret to target namespace
-func CopySecret(namespace *string) error {
+// copySecret copies a secret to target namespace
+func copySecret(namespace *string) error {
 	name := "bitfusion-secret"
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -454,13 +454,14 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 
 	// Determine whether to perform mutation based on annotation for the target resource
 	var required bool
+	injectionStatus = ""
 	if strings.ToLower(status) == "injected" {
 		required = false
 	} else {
 		switch strings.ToLower(annotations[admissionWebhookAnnotationInjectKey]) {
 		default:
 			required = false
-		case "y", "yes", "true", "on":
+		case "y", "yes", "true", "on", "all":
 			required = true
 		case bitFusionOnlyInjection:
 			injectionStatus = bitFusionOnlyInjection

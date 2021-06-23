@@ -246,7 +246,7 @@ After completing the installation, users can write a YAML file of Kubernetes to 
   - all: Injecting a Bitfusion dependency and BareMetal Token and adding the Bitfusion prefix to the content of the Container's command
   - no: Do nothing to POD
   - only-injection: Only Bitfusion dependencies and BareMetal tokens are injected
-- bitfusion.io/gpu-num:  
+- bitfusion.io/gpu-amount:  
   Number of GPU the workload requires from the Bitfusion cluster, Please use integers greater than 0. If you enter a decimal, it will be rounded up
 - bitfusion.io/gpu-percent:  
   Percentage of the memory of each GPU ,An integer with values ranging from 1 to 100
@@ -279,7 +279,7 @@ spec:
       resources:
         limits:
           # Request one GPU for this Pod from the Bitfusion cluster
-          bitfusion.io/gpu-num: 1
+          bitfusion.io/gpu-amount: 1
           # 50 percent of each GPU to be consumed
           bitfusion.io/gpu-percent: 50
       volumeMounts:
@@ -329,7 +329,7 @@ spec:
       command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
       resources:
         limits:
-          bitfusion.io/gpu-num: 1
+          bitfusion.io/gpu-amount: 1
           bitfusion.io/gpu-memory: 8000M
       volumeMounts:
         - name: code
@@ -488,7 +488,7 @@ spec:
       command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
       resources:
         limits:
-          bitfusion.io/gpu-num: 1
+          bitfusion.io/gpu-amount: 1
           bitfusion.io/gpu-memory: 8000M
       volumeMounts:
         - name: code
@@ -533,7 +533,7 @@ spec:
       command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
       resources:
         limits:
-          bitfusion.io/gpu-num: 1
+          bitfusion.io/gpu-amount: 1
           bitfusion.io/gpu-percent: 50
       volumeMounts:
         - name: code
