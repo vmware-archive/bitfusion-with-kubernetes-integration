@@ -110,13 +110,15 @@ func updateContainer(targets, source []corev1.Container, basePath string, bfClie
 		//container.Env = append(container.Env, source[0].Env...)
 		index := 0
 		for i := range container.Env {
+			glog.Infof("container.Env[i].Name = %s", container.Env[i].Name)
 			if container.Env[i].Name == "LD_LIBRARY_PATH" {
 				index = i
+				glog.Infof("index = %d", index)
 			}
 		}
 		if index != 0 {
 			env := corev1.EnvVar{Name: "LD_LIBRARY_PATH", Value: bfClientConfig.EnvVariable + container.Env[index].Value}
-			container.Env = append(container.Env, env)
+			container.Env[index] = env
 		} else {
 			env := corev1.EnvVar{Name: "LD_LIBRARY_PATH", Value: bfClientConfig.EnvVariable}
 			container.Env = append(container.Env, env)

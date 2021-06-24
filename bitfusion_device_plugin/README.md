@@ -88,7 +88,7 @@ update file bitfusion-injector.yaml
 vim bitfusion-with-kubernetes-integration/bitfusion_device_plugin/webhook/deployment/bitfusion-injector.yaml
 ```
 
-Set TOTAL_GPU_MEMORY values, the unit is M, the variable said Bitfusion Server used by single GPU memory size. The default setting is None
+Set TOTAL_GPU_MEMORY values, the unit is M, the variable said Bitfusion Server used by single GPU memory size
 
 ```
 apiVersion: apps/v1
