@@ -108,8 +108,19 @@ func updateContainer(targets, source []corev1.Container, basePath string, bfClie
 		})
 
 		//container.Env = append(container.Env, source[0].Env...)
-		env := corev1.EnvVar{Name: "LD_LIBRARY_PATH", Value: bfClientConfig.EnvVariable}
-		container.Env = append(container.Env, env)
+		index := 0
+		for i := range container.Env {
+			if container.Env[i].Name == "LD_LIBRARY_PATH" {
+				index = i
+			}
+		}
+		if index != 0 {
+			env := corev1.EnvVar{Name: "LD_LIBRARY_PATH", Value: bfClientConfig.EnvVariable + container.Env[index].Value}
+			container.Env = append(container.Env, env)
+		} else {
+			env := corev1.EnvVar{Name: "LD_LIBRARY_PATH", Value: bfClientConfig.EnvVariable}
+			container.Env = append(container.Env, env)
+		}
 		//env = corev1.EnvVar{Name: "PATH", Value: bfClientConfig.BinaryPath + ":$PATH"}
 		//container.Env = append(container.Env, env)
 		patches = append(patches, patchOperation{

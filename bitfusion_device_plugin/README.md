@@ -37,11 +37,7 @@ bitfusion-webhook runs as a Deployment on the Kubernetes master node.
 -  Bitfusion 2.5+
 -  kubectl and docker command are ready to use.  
 
-If you need to deploy the project on TKGI, you also need to install CFSSL, And you need to set the variable K8S_PLATFORM in the **bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin/Makefil** to tkgi
 
-```
-K8S_PLATFORM ?= tkgi
-```
 
 ### Get Baremetal Token for authorization
 In order to enable Bitfusion, users must generate a **Baremetal Token** for authorization and download the related tar file to the installation machine.  
@@ -92,7 +88,7 @@ update file bitfusion-injector.yaml
 vim bitfusion-with-kubernetes-integration/bitfusion_device_plugin/webhook/deployment/bitfusion-injector.yaml
 ```
 
-Set TOTAL_GPU_MEMORY values, the unit is M, the variable said Bitfusion Server used by single GPU memory size. The default setting is 16000, belongs to the most current general size of the display card,
+Set TOTAL_GPU_MEMORY values, the unit is M, the variable said Bitfusion Server used by single GPU memory size. The default setting is None
 
 ```
 apiVersion: apps/v1
@@ -241,23 +237,23 @@ bwki-webhook-svc              ClusterIP   10.101.39.4   <none>        443/TCP   
 
 After completing the installation, users can write a YAML file of Kubernetes to consume the Bitfusion resources. There are three parameters related to Bitfusion resource in a YAML file: 
   
-- auto-management/bitfusion: all / no / only-injection 
+- auto-management/bitfusion: all / none / injection 
   Use this annotation to describe whether Bitfusion device plugin is enabled for this workload.  
   - all: Injecting a Bitfusion dependency and BareMetal Token and adding the Bitfusion prefix to the content of the Container's command
-  - no: Do nothing to POD
-  - only-injection: Only Bitfusion dependencies and BareMetal tokens are injected
+  - none: Do nothing to POD
+  - injection: Only Bitfusion dependencies and BareMetal tokens are injected
 - bitfusion.io/gpu-amount:  
   Number of GPU the workload requires from the Bitfusion cluster, Please use integers greater than 0. If you enter a decimal, it will be rounded up
 - bitfusion.io/gpu-percent:  
   Percentage of the memory of each GPU ,An integer with values ranging from 1 to 100
- - bitfusion.io/gpu-memory: The default unit is b. It can be used with the K8s native memory application unit (Mi,M,G,Gi). It cannot be used with the bitfusion.io/gpu-percent parameters, if used together, the bitfusion.io/gpu-percent parameters will be ignored.
- - bitfusion-client/os: Need to inject bitfusion client version, currently only support  [ubuntu18 ubuntu20, centos7, centos8 ) four system version
+ - bitfusion.io/gpu-memory: The default unit is bit. It can be used with the K8s native memory application unit (Mi,M,G,Gi). It cannot be used with the bitfusion.io/gpu-percent parameters, if used together, the bitfusion.io/gpu-percent parameters will be ignored.
+ - bitfusion-client/os: Need to inject Btfusion client version, currently only support  ( ubuntu18 ubuntu20, centos7, centos8 ) four system big version
  - bitfusion-client/version:Need to inject bitfusion client version number, 250, said version 2.5, and currently only supports the 2.5 version of the injection
  
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
 
-###option 1###
-**Using gpu-percent deployment:**
+### Option 1 ###
+**Using gpu-percent:**
 
 ```yaml
 apiVersion: v1
@@ -299,7 +295,7 @@ Then apply the yaml with the following command to deploy:
 $ kubectl create namespace tensorflow-benchmark
 $ kubectl create -f example/pod.yaml
 ```
-###option 2###
+### Option 2 ###
 **Use gpu-memory deployment:**  
 Apply the yaml with the following command to deploy:
 
@@ -439,12 +435,12 @@ $ kubectl delete -f example/pod.yaml
 ```
 
 ## Using Quota
-###Quota set
+### Quota set
 
-The resource name of our device plugin is bitfusion.io/gpu, so use the following command to set the quota; Where, if the quota value is 100, it limits 1 GPU. Also, since our project only controls the management of requests-bitfusion-io/gpu, quota limits can only be set in Requests
+The resource name of our device plugin is bitfusion.io/gpu, so use the following command to set the quota; Where, if the quota value is 100, it limits 1 GPU. Also, since our project only controls the management of requests.bitfusion.io/gpu, quota limits can only be set in Requests
 
 
-Use the following command to set the quota in tensorflow - benchmark set under the namespace name called bitfusion - quota resource quota
+Use the following command to set the quota in tensorflow-benchmark set under the namespace name called bitfusion-quota resource quota
 
 ```
 cat <<EOF | kubectl create -f -
@@ -465,7 +461,7 @@ EOF
 
 Respectively using the bitfusion.io/gpu-memory way create pod and use bitfusion.io/gpu-percent created pod
 
-###bitfusion.io/gpu-memory
+### bitfusion.io/gpu-memory
 
 Use the following command to create the pod.  
 
@@ -502,6 +498,8 @@ EOF
 
 Since we set up in front TOTAL_GPU_MEMORY value is 16000, applied for 8000M in the pod, so we use the 50% bitfusion.io/gpu quota
 
+Calculating formula for bitfusion.io/gpu = gpu-memory / TOTAL_GPU_MEMORY * gpu-amount * 100；The result as an integer, decimal point integer upwards
+
 Use the following command to check the quota occupied the results:  
 
 ```
@@ -510,7 +508,7 @@ $ kubectl describe quota -n tensorflow-benchmark bitfusion-quota
 
 ![img](diagrams/quota.png) 
 
-###bitfusion.io/gpu-percent
+### bitfusion.io/gpu-percent
 
 Use the following command to create the pod
 
@@ -545,6 +543,8 @@ spec:
 EOF
 ```
 
+Calculating formula for bitfusion.io/gpu = gpu-percent * gpu-amount 
+
 
 Use the following command to check the quota occupied the results:  
 
@@ -575,4 +575,14 @@ Re-download a new validate token and use the following commands to update the se
 $ kubectl delete secret -n kube-system bitfusion-secret  
 $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret  
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
-```  
+```    
+
+## Note
+
+If the environment variable LD_LIBRARY_PATH container has a default value, its value is set in the pod, please reset
+
+If you need to deploy the project on TKGI(Tanzu Kubernetes Grid Integrated), you also need to install CFSSL, And you need to set the variable K8S_PLATFORM in the **bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin/Makefile** to tkgi
+
+```
+K8S_PLATFORM ?= tkgi
+```

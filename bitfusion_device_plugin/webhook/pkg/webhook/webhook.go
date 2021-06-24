@@ -67,7 +67,7 @@ const (
 	bitFusionGPUResourceNum     = "bitfusion.io/gpu-amount"
 	bitFusionGPUResourceMemory  = "bitfusion.io/gpu-memory"
 	bitFusionGPUResourcePartial = "bitfusion.io/gpu-percent"
-	bitFusionOnlyInjection      = "only-injection"
+	bitFusionOnlyInjection      = "injection"
 )
 
 // WebhookServer struct
