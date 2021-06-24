@@ -117,7 +117,7 @@ func updateContainer(targets, source []corev1.Container, basePath string, bfClie
 			}
 		}
 		if index != 0 {
-			env := corev1.EnvVar{Name: "LD_LIBRARY_PATH", Value: bfClientConfig.EnvVariable + container.Env[index].Value}
+			env := corev1.EnvVar{Name: "LD_LIBRARY_PATH", Value: bfClientConfig.EnvVariable + ":" + container.Env[index].Value}
 			container.Env[index] = env
 		} else {
 			env := corev1.EnvVar{Name: "LD_LIBRARY_PATH", Value: bfClientConfig.EnvVariable}
