@@ -64,10 +64,10 @@ const (
 	admissionWebhookAnnotationStatusKey = "auto-management/status"
 	// "~1" is used for escape (http://jsonpatch.com/)
 	bitFusionGPUResource        = "bitfusion.io/gpu"
-	bitFusionGPUResourceNum     = "bitfusion.io/gpu-num"
+	bitFusionGPUResourceNum     = "bitfusion.io/gpu-amount"
 	bitFusionGPUResourceMemory  = "bitfusion.io/gpu-memory"
 	bitFusionGPUResourcePartial = "bitfusion.io/gpu-percent"
-	bitFusionOnlyInjection      = "only-injection"
+	bitFusionOnlyInjection      = "injection"
 )
 
 // WebhookServer struct
@@ -214,7 +214,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		return response
 	}
 
-	if err = CopySecret(&req.Namespace); err != nil {
+	if err = copySecret(&req.Namespace); err != nil {
 		glog.Errorf("Can't copy secret: %v", err)
 		response.Result = &metav1.Status{Message: err.Error()}
 		return response
