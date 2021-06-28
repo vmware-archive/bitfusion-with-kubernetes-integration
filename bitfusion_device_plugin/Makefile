@@ -10,9 +10,6 @@ K8S_PLATFORM ?= community
 
 export K8S_PLATFORM
 
-PWD := $(shell pwd)
-BASE_DIR := $(shell basename $(PWD))
-
 IMAGE_TAG ?= $(shell date +v%Y%m%d)-$(shell git describe --match=$(git rev-parse --short=8 HEAD) --tags --always --dirty)
 
 DEVICE_PLUGIN_ORIGINAL_NAME := phaedobf/device-plugin:v0.1
