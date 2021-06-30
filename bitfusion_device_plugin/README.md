@@ -253,7 +253,7 @@ After completing the installation, users can write a YAML file of Kubernetes to 
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
 
 ### Option 1 ###
-**Using gpu-percent:**
+**Submit the workload with gpu-percent parameter:**
 
 ```yaml
 apiVersion: v1
@@ -296,7 +296,7 @@ $ kubectl create namespace tensorflow-benchmark
 $ kubectl create -f example/pod.yaml
 ```
 ### Option 2 ###
-**Use gpu-memory deployment:**  
+**Submit the workload with gpu-memory parameter:**  
 Apply the yaml with the following command to deploy:
 
 ```shell
@@ -437,10 +437,10 @@ $ kubectl delete -f example/pod.yaml
 ## Using Quota
 ### Quota set
 
-The resource name of our device plugin is bitfusion.io/gpu, so use the following command to set the quota; Where, if the quota value is 100, it limits 1 GPU. Also, since our project only controls the management of requests.bitfusion.io/gpu, quota limits can only be set in Requests
+The resource name of our device plugin is **bitfusion.io/gpu**, so use the following command to set the quota; When the quota value is set to 100, the GPU is forced to use a maximum of 1 GPU. Also, since our project only controls the management of **requests.bitfusion.io/gpu**, quota limits can only be set in Requests
 
 
-Use the following command to set the quota in tensorflow-benchmark set under the namespace name called bitfusion-quota resource quota
+Use the following command to create the quota
 
 ```
 cat <<EOF | kubectl create -f -
@@ -459,7 +459,7 @@ EOF
 ```  
 
 
-Respectively using the bitfusion.io/gpu-memory way create pod and use bitfusion.io/gpu-percent created pod
+Create the POD validation quota using the following two methods
 
 ### bitfusion.io/gpu-memory
 
@@ -498,9 +498,9 @@ EOF
 
 Since we set up in front TOTAL_GPU_MEMORY value is 16000, applied for 8000M in the pod, so we use the 50% bitfusion.io/gpu quota
 
-Calculating formula for bitfusion.io/gpu = gpu-memory / TOTAL_GPU_MEMORY * gpu-amount * 100；The result as an integer, decimal point integer upwards
+Calculating formula for **[bitfusion.io/gpu]** = gpu-memory / TOTAL_GPU_MEMORY * gpu-amount * 100；The result as an integer, decimal round up.
 
-Use the following command to check the quota occupied the results:  
+Use the following command to check the quota consumption the results:  
 
 ```
 $ kubectl describe quota -n tensorflow-benchmark bitfusion-quota 
@@ -543,10 +543,10 @@ spec:
 EOF
 ```
 
-Calculating formula for bitfusion.io/gpu = gpu-percent * gpu-amount 
+Calculating formula for **[bitfusion.io/gpu]** = gpu-percent * gpu-amount 
 
 
-Use the following command to check the quota occupied the results:  
+Use the following command to check the quota consumption the results:  
 
 ```
 $ kubectl describe quota -n tensorflow-benchmark bitfusion-quota 
@@ -568,8 +568,8 @@ $ kubectl logs -n tensorflow-benchmark   bf-pkgs
 The logs below indicate some errors of contacting Bitfusion server.
 ![img](diagrams/trouble-one.png)   
 
-Check the validity of the **Bitfusion token** from vCenter Bitfusion Plugin. 
-Re-download a new validate token and use the following commands to update the secret in Kubernetes:  (Make sure to delete all the stale bitfusion-secret in each namespace of Kubernetes)
+Check the validity of the **Baremetal token** from vCenter Bitfusion Plugin. 
+Re-download a new valid token and use the following commands to update the secret in Kubernetes:  (Make sure to delete all the stale bitfusion-secret in each namespace of Kubernetes)
 
 ```
 $ kubectl delete secret -n kube-system bitfusion-secret  
