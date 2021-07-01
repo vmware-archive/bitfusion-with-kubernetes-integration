@@ -81,7 +81,7 @@ For more details about kubectl:  <https://kubernetes.io/docs/reference/kubectl/o
 
 ## Quota Prerequisites
 
-### Set the environment variable TOTAL_GPU_MEMORY
+### Set TOTAL_GPU_MEMORY
 update file bitfusion-injector.yaml
 
 ```
