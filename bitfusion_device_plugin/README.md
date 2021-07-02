@@ -426,7 +426,7 @@ total images/sec: 199.65
 ```
 
 
-使用下面命令查看在auto-management/bitfusion设置为all的时候，webhook对pod进行的改变
+Use the following command to see the auto-management/bitfusion set to **all**, webhook to the change of pod
 
 ```bash
 $ kubectl edit pod -n tensorflow-benchmark bf-pkgs
@@ -483,7 +483,7 @@ spec:
     ......
 ```
 
-如果auto-management/bitfusion设置为injection的时候，webhook对pod进行的改变与all的区别在command部分
+If the auto-management/bitfusion set to **injection**, webhook the difference between the change of pod and all in the command
 
 ```bash
 $ kubectl edit pod -n tensorflow-benchmark bf-pkgs
@@ -575,7 +575,7 @@ EOF
 
 Since we set up in front TOTAL_GPU_MEMORY value is 16000, applied for 8000M in the pod, so we use the 50% bitfusion.io/gpu quota
 
-Calculating formula for **[bitfusion.io/gpu]** = gpu-memory / TOTAL_GPU_MEMORY * gpu-amount * 100；The result as an integer, decimal round up.
+Calculating formula for **[bitfusion.io/gpu]** = gpu-memory / TOTAL_GPU_MEMORY * gpu-amount * 100；Result is integer.
 
 Use the following command to check the quota consumption:  
 
