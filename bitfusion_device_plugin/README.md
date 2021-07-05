@@ -536,9 +536,9 @@ EOF
 ```  
 
 
-Create the POD using the following two methods
+### Create the POD using the following two methods
 
-### bitfusion.io/gpu-memory
+#### bitfusion.io/gpu-memory
 
 Use the following command to create the pod.  
 
@@ -585,7 +585,7 @@ $ kubectl describe quota -n tensorflow-benchmark bitfusion-quota
 
 ![img](diagrams/quota.png) 
 
-### bitfusion.io/gpu-percent
+#### bitfusion.io/gpu-percent
 
 Use the following command to create the pod
 
