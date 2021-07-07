@@ -99,11 +99,14 @@ For more details about kubectl:  <https://kubernetes.io/docs/reference/kubectl/o
 
 
 ## 3. Quick Start
+
 There are two deployment options:  
 - Using pre-built images   
 - Building images from scratch  
 
+
 ### 3-1. Option 1: Using pre-built images (recommended) 
+
 Use the following command to clone the source code:  
 
 ```shell
@@ -301,6 +304,49 @@ Apply the yaml with the following command to deploy:
 $ kubectl create namespace tensorflow-benchmark
 $ kubectl create -f example/pod-memory.yaml
 ```
+### Option 2 ###
+**Use gpu-memory deployment:**  
+Apply the yaml with the following command to deploy:
+
+```shell
+$ kubectl create namespace tensorflow-benchmark
+$ kubectl create -f example/pod-memory.yaml
+```
+
+Using bitfusion.io/gpu-memory in resources/limits
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    auto-management/bitfusion: "all"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "250"
+  name: bf-pkgs
+  # You can specify any namespace
+  namespace: tensorflow-benchmark
+spec:
+  containers:
+    - image: nvcr.io/nvidia/tensorflow:19.07-py3
+      imagePullPolicy: IfNotPresent
+      name: bf-pkgs
+      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+      resources:
+        limits:
+          bitfusion.io/gpu-amount: 1
+          bitfusion.io/gpu-memory: 8000M
+      volumeMounts:
+        - name: code
+          mountPath: /benchmark
+    volumes:
+        - name: code
+          # The Benchmarks used for the test came from: https://github.com/tensorflow/benchmarks/tree/tf_benchmark_stage 
+          # Please make sure you have the corresponding content in /home/benchmarks directory on your node
+          hostPath:
+            path: /home/benchmarks
+```
+
 
 Using bitfusion.io/gpu-memory in resources/limits
 
@@ -519,6 +565,7 @@ The resource name of our device plugin is **bitfusion.io/gpu**, so use the follo
 
 Use the following command to create the quota
 
+
 ```
 cat <<EOF | kubectl create -f -
 apiVersion: v1
@@ -534,6 +581,102 @@ items:
         requests.bitfusion.io/gpu: 100
 EOF 
 ```  
+
+
+Respectively using the bitfusion.io/gpu-memory way create pod and use bitfusion.io/gpu-percent created pod
+
+### bitfusion.io/gpu-memory
+
+Use the following command to create the pod.  
+
+```
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    auto-management/bitfusion: "all"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "250"
+  name: bf-pkgs
+  namespace: tensorflow-benchmark
+spec:
+  containers:
+    - image: nvcr.io/nvidia/tensorflow:19.07-py3
+      imagePullPolicy: IfNotPresent
+      name: bf-pkgs
+      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+      resources:
+        limits:
+          bitfusion.io/gpu-amount: 1
+          bitfusion.io/gpu-memory: 8000M
+      volumeMounts:
+        - name: code
+          mountPath: /benchmark
+  volumes:
+    - name: code
+      hostPath:
+        path: /home/benchmarks
+EOF
+```
+
+Since we set up in front TOTAL_GPU_MEMORY value is 16000, applied for 8000M in the pod, so we use the 50% bitfusion.io/gpu quota
+
+Calculating formula for bitfusion.io/gpu = gpu-memory / TOTAL_GPU_MEMORY * gpu-amount * 100；The result as an integer, decimal point integer upwards
+
+Use the following command to check the quota occupied the results:  
+
+```
+$ kubectl describe quota -n tensorflow-benchmark bitfusion-quota 
+``` 
+
+![img](diagrams/quota.png) 
+
+### bitfusion.io/gpu-percent
+
+Use the following command to create the pod
+
+```
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    auto-management/bitfusion: "all"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "250"
+  name: bf-pkgs
+  namespace: tensorflow-benchmark
+spec:
+  containers:
+    - image: nvcr.io/nvidia/tensorflow:19.07-py3
+      imagePullPolicy: IfNotPresent
+      name: bf-pkgs
+      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+      resources:
+        limits:
+          bitfusion.io/gpu-amount: 1
+          bitfusion.io/gpu-percent: 50
+      volumeMounts:
+        - name: code
+          mountPath: /benchmark
+  volumes:
+    - name: code
+      hostPath:
+        path: /home/benchmarks
+EOF
+```
+
+Calculating formula for bitfusion.io/gpu = gpu-percent * gpu-amount 
+
+
+Use the following command to check the quota occupied the results:  
+
+```
+$ kubectl describe quota -n tensorflow-benchmark bitfusion-quota 
+``` 
+
+![img](diagrams/quota.png) 
 
 
 ### 5-2. Create the POD using the following two methods
@@ -645,8 +788,10 @@ $ kubectl logs -n tensorflow-benchmark   bf-pkgs
 The logs below indicate some errors of contacting Bitfusion server.
 ![img](diagrams/trouble-one.png)   
 
+
 Check the validity of the **Baremetal token** from vCenter Bitfusion Plugin. 
 Re-download a new valid token and use the following commands to update the secret in Kubernetes:  (Make sure to delete all the stale bitfusion-secret in each namespace of Kubernetes)
+
 
 ```
 $ kubectl delete secret -n kube-system bitfusion-secret  
@@ -659,6 +804,7 @@ $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-syst
 If the environment variable LD_LIBRARY_PATH container has a default value, its value is set in the pod, please reset
 
 If we need to deploy the project on TKGI(Tanzu Kubernetes Grid Integrated), we also need to install CFSSL, And we need to set the variable K8S_PLATFORM in the **bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin/Makefile** to tkgi
+
 
 ```
 K8S_PLATFORM ?= tkgi
