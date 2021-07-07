@@ -664,13 +664,13 @@ $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-syst
 
 ## 7. Note
 
-If set a variable in the Dockerfile LD_LIBRARY_PATH
+If used in Dockerfile ENV set LD_LIBRARY_PATH
 
 ```Dockerfile
 ENV LD_LIBRARY_PATH /usr/local/lib
 ```
 
-Need to create the yaml file again LD_LIBRARY_PATH values
+Need to reset LD_LIBRARY_PATH in the Pod
 
 ```yaml
 apiVersion: v1
