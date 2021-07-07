@@ -119,7 +119,9 @@ $ cd bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin
 $ make deploy
 ```
 
+
 ### 3-2. Option 2: Building images from scratch 
+
 Instead of using the pre-buit images, users can choose to build the images from source. Optionally, after the images are built, they can be pushed to a registry service (either Docker Hub or an internal registry server). 
 
 Use the following command to clone the source code:
@@ -552,11 +554,11 @@ $ kubectl delete -f example/pod.yaml
 ## 5. Using Quota (optional)
 ### 5-1. Enforce Quota
 
+
 The resource name of our device plugin is **bitfusion.io/gpu**, so use the following command to make the enforce quota; Enforce quota value of 100 means the maximum use of 100% of one GPU. Also, since our project only controls the management of **requests.bitfusion.io/gpu**, quota limits can only be set in Requests
 
 
 Use the following command to create the quota
-
 
 ```
 cat <<EOF | kubectl create -f -
@@ -669,6 +671,7 @@ $ kubectl describe quota -n tensorflow-benchmark bitfusion-quota
 ``` 
 
 ![img](diagrams/quota.png) 
+
 
 
 ## 6. Troubleshooting
