@@ -300,82 +300,46 @@ $ kubectl create -f example/pod.yaml
 
 ### 4-2. Option 2 ###
 **Submit the workload with gpu-memory parameter:**  
+
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    auto-management/bitfusion: "all"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "250"
+  name: bf-pkgs
+  # You can specify any namespace
+  namespace: tensorflow-benchmark
+spec:
+  containers:
+    - image: nvcr.io/nvidia/tensorflow:19.07-py3
+      imagePullPolicy: IfNotPresent
+      name: bf-pkgs
+      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+      resources:
+        limits:
+          bitfusion.io/gpu-amount: 1
+          bitfusion.io/gpu-memory: 8000M
+      volumeMounts:
+        - name: code
+          mountPath: /benchmark
+    volumes:
+        - name: code
+          # The Benchmarks used for the test came from: https://github.com/tensorflow/benchmarks/tree/tf_benchmark_stage 
+          # Please make sure you have the corresponding content in /home/benchmarks directory on your node
+          hostPath:
+            path: /home/benchmarks
+```
+
 Apply the yaml with the following command to deploy:
 
 ```shell
 $ kubectl create namespace tensorflow-benchmark
 $ kubectl create -f example/pod-memory.yaml
 ```
-
-Using bitfusion.io/gpu-memory in resources/limits
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  annotations:
-    auto-management/bitfusion: "all"
-    bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "250"
-  name: bf-pkgs
-  # You can specify any namespace
-  namespace: tensorflow-benchmark
-spec:
-  containers:
-    - image: nvcr.io/nvidia/tensorflow:19.07-py3
-      imagePullPolicy: IfNotPresent
-      name: bf-pkgs
-      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
-      resources:
-        limits:
-          bitfusion.io/gpu-amount: 1
-          bitfusion.io/gpu-memory: 8000M
-      volumeMounts:
-        - name: code
-          mountPath: /benchmark
-    volumes:
-        - name: code
-          # The Benchmarks used for the test came from: https://github.com/tensorflow/benchmarks/tree/tf_benchmark_stage 
-          # Please make sure you have the corresponding content in /home/benchmarks directory on your node
-          hostPath:
-            path: /home/benchmarks
-```
-
-
-Using bitfusion.io/gpu-memory in resources/limits
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  annotations:
-    auto-management/bitfusion: "all"
-    bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "250"
-  name: bf-pkgs
-  # You can specify any namespace
-  namespace: tensorflow-benchmark
-spec:
-  containers:
-    - image: nvcr.io/nvidia/tensorflow:19.07-py3
-      imagePullPolicy: IfNotPresent
-      name: bf-pkgs
-      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
-      resources:
-        limits:
-          bitfusion.io/gpu-amount: 1
-          bitfusion.io/gpu-memory: 8000M
-      volumeMounts:
-        - name: code
-          mountPath: /benchmark
-    volumes:
-        - name: code
-          # The Benchmarks used for the test came from: https://github.com/tensorflow/benchmarks/tree/tf_benchmark_stage 
-          # Please make sure you have the corresponding content in /home/benchmarks directory on your node
-          hostPath:
-            path: /home/benchmarks
-```
-
 
 **If the Pod runs successfully, the output looks like below:**
 
