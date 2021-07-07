@@ -664,7 +664,32 @@ $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-syst
 
 ## 7. Note
 
-If the environment variable LD_LIBRARY_PATH container has a default value, its value is set in the pod, please reset
+If set a variable in the Dockerfile LD_LIBRARY_PATH
+
+```Dockerfile
+ENV LD_LIBRARY_PATH /usr/local/lib
+```
+
+Need to create the yaml file again LD_LIBRARY_PATH values
+
+```yaml
+apiVersion: v1
+kind: Pod
+......
+  containers:
+    - image: nvcr.io/nvidia/tensorflow:19.07-py3
+      ......
+      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+      env:
+        - name: LD_LIBRARY_PATH
+          value: /usr/local/lib
+      resources:
+        limits:
+          bitfusion.io/gpu-amount: 1
+          bitfusion.io/gpu-percent: 50
+......
+
+```
 
 If we need to deploy the project on TKGI(Tanzu Kubernetes Grid Integrated), we also need to install CFSSL, And we need to set the variable K8S_PLATFORM in the **bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin/Makefile** to tkgi
 
