@@ -251,14 +251,14 @@ After completing the installation, users can write a YAML file of Kubernetes to 
 | bitfusion.io/gpu-amount   | positive integer                        |The amount of GPU the workload request from the Bitfusion cluster|
 | bitfusion.io/gpu-percent  | positive integer                        |Percentage of the memory of each GPU|
 | bitfusion.io/gpu-memory   | positive integer                        |Memory size of each GPU,The default unit is bit.It can be used with the K8s native memory application unit (Mi,M,G,Gi)|
-| bitfusion-client/os       | ubuntu18 / ubuntu20 / centos7 / centos8 |The version of the containers that use the Bitfusion client|
+| bitfusion-client/os       | ubuntu18 / ubuntu20 / centos7 / centos8 |The OS of the containers that use the Bitfusion client|
 | bitfusion-client/version  | 250                                     |The version of Bitfusion client to be used in this container is 2.5|
 
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
 
 There are two options to specify the Bitfusion resource which the workload request.
 
-### 4.1. Option 1: Submit the workload with gpu-percent parameter ###
+### 4.1. Option 1: Submit the workload with "gpu-percent" parameter ###
 
 Use bitfusion.io/gpu-amount and bitfusion.io/gpu-percent parameters in YAML file to specify the resource the pod request.
 
@@ -305,7 +305,7 @@ $ kubectl create -f example/pod.yaml
 
 
 
-### 4.2. Option 2: Submit the workload with gpu-memory parameter ###
+### 4.2. Option 2: Submit the workload with "gpu-memory" parameter ###
 
 Use bitfusion.io/gpu-amount and bitfusion.io/gpu-memory parameters in YAML file to specify the resource the pod request.
 
@@ -439,7 +439,7 @@ total images/sec: 199.65
 
 
 
-### 4.3. The configuration of auto-management/bitfusion parameter
+### 4.3. The configuration of "auto-management/bitfusion parameter"
 
 If the value of auto-management/bitfusion parameter is set to "all", use the following command to to check the status of the pod when the workload has been summited. 
 
@@ -500,7 +500,7 @@ spec:
 
 It shows the command of the workload has been mutated with the Bitfusion parameters.
 
-Besides that, if the auto-management/bitfusion set to "injection",  use the following command to to check the status of the pod when the workload has been summited.
+Besides that, if the auto-management/bitfusion is set to "injection",  use the following command to to check the status of the pod when the workload has been summited.
 
 ```bash
 $ kubectl edit pod -n tensorflow-benchmark bf-pkgs
@@ -521,7 +521,7 @@ spec:
     
 ```
 
-The command of the workload has not been mutated, but the Bitfusion Baremetal token, Bitfusion distros and other configuration are injected into the container. Users can write the command of the container and use the Bitfusion command as they would like to.
+The command of the workload has not been mutated, but the Bitfusion Baremetal token, Bitfusion distros and other configuration are injected into the container. Users can manually write the command of the container and use the Bitfusion command as they would like to.
 
 Finally, use the following command to remove POD: 
 
@@ -533,7 +533,7 @@ $ kubectl delete -f example/pod.yaml
 ### 5.1. Enforce Quota
 
 
-The resource name of the device plugin is **bitfusion.io/gpu**. Use the following command to enforce quota.  The value of "requests.bitfusion.io/gpu" is set to 100 means it is able to use of 100% of one GPU at most which is equivalent to the usage of two half GPU. In addition to that, quota limits can only be set with requests.bitfusion.io/gpu, limits.bitfusion.io/gpu is not valid for quota.
+The resource name of the device plugin is **bitfusion.io/gpu**. Use the following command to enforce quota.  The value of "requests.bitfusion.io/gpu" is set to 100 means it is able to use of 100% of one GPU at most which is equivalent to the usage of two half GPUs. In addition to that, quota limits can only be set with "requests.bitfusion.io/gpu" and "limits.bitfusion.io/gpu" is not valid for quota.
 
 
 Use the following command to create the quota
@@ -555,9 +555,9 @@ EOF
 ```
 
 
-### 5.2. Create the POD using the following two methods
+### 5.2. Validate the quota using the following two methods
 
-#### 5.2.1. Using parameter bitfusion.io/gpu-memory
+#### 5.2.1. Using parameter "bitfusion.io/gpu-memory"
 
 Use the following command to create the pod.  
 
@@ -604,7 +604,7 @@ $ kubectl describe quota -n tensorflow-benchmark bitfusion-quota
 
 ![img](diagrams/quota.png) 
 
-#### 5.2.2. Using parameter bitfusion.io/gpu-percent
+#### 5.2.2. Using parameter "bitfusion.io/gpu-percent"
 
 Use the following command to create the pod
 
