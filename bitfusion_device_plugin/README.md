@@ -105,8 +105,8 @@ For more details about kubectl:  <https://kubernetes.io/docs/reference/kubectl/o
 ## 3. Quick Start
 
 There are two deployment options:  
-- 1. Using pre-built images   
-- 2. Building images from scratch  
+- Using pre-built images   
+- Building images from scratch  
 
 
 ### 3.1. Option 1: Using pre-built images (recommended) 
@@ -149,7 +149,7 @@ IMAGE_REPO ?= docker.io/bitfusiondeviceplugin
 DEVICE_IMAGE_NAME ?= bitfusion-device-plugin
 WEBHOOK_IMAGE_NAME ?= bitfusion-webhook
 PKG_IMAGE_NAME ?= bitfusion-client
-IMAGE_TAG  ?= 0.1
+IMAGE_TAG  ?= 0.2
 ```
 
 Now start building images using the command below:
@@ -162,9 +162,9 @@ If everything works well, use the following command to check images:
 ```shell
 $ docker images
 REPOSITORY                                                                         TAG
-docker.io/bitfusiondeviceplugin/bitfusion-device-plugin                            0.1                 
-docker.io/bitfusiondeviceplugin/bitfusion-webhook                                  0.1                 
-docker.io/bitfusiondeviceplugin/bitfusion-client                                   0.1         
+docker.io/bitfusiondeviceplugin/bitfusion-device-plugin                            0.2                 
+docker.io/bitfusiondeviceplugin/bitfusion-webhook                                  0.2                 
+docker.io/bitfusiondeviceplugin/bitfusion-client                                   0.2         
 
 ```
 
@@ -248,11 +248,11 @@ After completing the installation, users can write a YAML file of Kubernetes to 
 | Key        | Value    |  Describe  |
 | :--------   | :-----   | :---- |
 | auto-management/bitfusion | all / none / injection                  |[all] injecting a Bitfusion dependency and BareMetal Token and adding the Bitfusion prefix to the content of the Container's command, [injection] only Bitfusion dependencies and BareMetal tokens are injected and [none] do nothing to POD        |
-| bitfusion.io/gpu-amount   | positive integer                        |Number of GPU the workload requires from the Bitfusion cluster|
+| bitfusion.io/gpu-amount   | positive integer                        |The amount of GPU the workload request from the Bitfusion cluster|
 | bitfusion.io/gpu-percent  | positive integer                        |Percentage of the memory of each GPU|
-| bitfusion.io/gpu-memory   | positive integer                        |Memory of each GPU,The default unit is bit.It can be used with the K8s native memory application unit (Mi,M,G,Gi)|
-| bitfusion-client/os       | ubuntu18 / ubuntu20 / centos7 / centos8 |Need to inject Btfusion client os version|
-| bitfusion-client/version  | 250                                     |Need to inject bitfusion client version number. 250, said version is 2.5|
+| bitfusion.io/gpu-memory   | positive integer                        |Memory size of each GPU,The default unit is bit.It can be used with the K8s native memory application unit (Mi,M,G,Gi)|
+| bitfusion-client/os       | ubuntu18 / ubuntu20 / centos7 / centos8 |The version of the containers that use the Bitfusion client|
+| bitfusion-client/version  | 250                                     |The version of Bitfusion client to be used in this container is 2.5|
 
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
 
