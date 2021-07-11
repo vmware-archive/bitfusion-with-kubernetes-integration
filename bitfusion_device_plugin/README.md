@@ -678,7 +678,7 @@ $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-syst
 
 ## 7. Note
 
-7.1. The environment variable of LD_LIBRARY_PATH
+### 7.1. The environment variable of LD_LIBRARY_PATH
 
 If the variable LD_LIBRARY_PATH is set in Dockerfile, it is needed to reset the value of this variable in the YAML file of the workload which will use it, otherwise it won't go into effect.
 
@@ -711,14 +711,25 @@ kind: Pod
 
 ```
 
-7.2. Deploy the Bitfusion Device Plugin on Tanzu
+### 7.2. Deploy the Bitfusion Device Plugin on Tanzu
 
 In order to deploy the Bitfusion device plugin on TKGi(Tanzu Kubernetes Grid Integrated), CFSSL is needed to be installed manually on the installation machine. Then update the value of  K8S_PLATFORM in the **bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin/Makefile** to "tkgi".
 
 
-```
+```shell
 K8S_PLATFORM ?= tkgi
 ```
 
 After that run the "make deploy" command to start the deployment.
+
+### 7.3 Alternative docker image registry
+
+Below is another image regsitry for users to get the docker images.
+```shell
+ccr.ccs.tencentyun.com/bitfusion/bitfusion-device-plugin:0.2
+
+ccr.ccs.tencentyun.com/bitfusion/bitfusion-webhook:0.2
+
+ccr.ccs.tencentyun.com/bitfusion/bitfusion-client:0.2
+```
 
