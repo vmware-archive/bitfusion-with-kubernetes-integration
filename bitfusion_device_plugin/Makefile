@@ -76,3 +76,33 @@ endif
 	@kubectl create -f $(DEVICE_PLUGIN_YAML_TO_DEPLOY)
 	@echo "Create webhook ..."
 	@bash webhook/deploy.sh
+
+
+############################################################
+# clear section
+############################################################
+clear: clear-object clear-file
+
+clear-object:
+	@echo "Delete wbehook ..."
+	@kubectl delete -f webhook/deploy/deploy-bitfusion-injector.yaml
+	@echo "Delete wbehook service ..."
+	@kubectl delete -f webhook/deploy/bitfusion-injector-service.yaml
+	@echo "Delete wbehook configmap ..."
+	@kubectl delete -f webhook/deploy/deploy-bitfusion-injector-webhook-configmap.yaml
+	@echo "Delete wbehook mutating configuration ..."
+	@kubectl delete -f webhook/deploy/bitfusion-mutating-webhook-configuration.yaml
+	@echo "Delete bwki service account ..."
+	@kubectl delete -f webhook/deploy/bitfusion-service-account.yaml
+	@echo "Delete wbehook validating configuration ..."
+	@kubectl delete -f webhook/deploy/bitfusion-validating-webhook-configuration.yaml
+	@echo "Delete namespace bwki ..."
+	@kubectl delete ns bwki
+	@echo "Delete device-plugin ..."
+	@kubectl delete -f $(DEVICE_PLUGIN_YAML_TO_DEPLOY)
+
+clear-file:
+	@rm -rf webhook/deploy
+	@rm -rf $(DEVICE_PLUGIN_YAML_TO_DEPLOY)
+	@rm -rf $(CONFIGMAP_YAML_TO_DEPLOY)
+	@rm -rf $(WEBHOOK_YAML_TO_DEPLOY)
