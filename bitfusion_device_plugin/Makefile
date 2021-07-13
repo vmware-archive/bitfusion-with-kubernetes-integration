@@ -81,7 +81,7 @@ endif
 ############################################################
 # clear section
 ############################################################
-clear: clear-object clear-file
+uninstall: clear-object clear-file
 
 clear-object:
 	@echo "Delete wbehook ..."
