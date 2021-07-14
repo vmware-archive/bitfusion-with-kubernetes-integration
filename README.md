@@ -20,7 +20,7 @@ This project is a collection of tools for Bitfusion to be used with Kubernetes a
 
 ## Feedback
 
-Feel free to send us feedback by [filing an issue](./issues/new). Feature requests are always welcome. If you wish to contribute, please take a quick look at the next section.
+Feel free to send us feedback by [filing an issue](https://github.com/vmware/bitfusion-with-kubernetes-integration/issues/new). Feature requests are always welcome. If you wish to contribute, please take a quick look at the next section.
 
 ## How to Contribute
 
