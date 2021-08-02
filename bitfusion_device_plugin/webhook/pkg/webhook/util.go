@@ -36,14 +36,15 @@ func addContainer(target, added []corev1.Container, basePath string, bfClientCon
 		index := strings.Index(bfClientConfig.EnvVariable, "/opt/bitfusion")
 		optPath := bfClientConfig.EnvVariable[0:index]
 		// /bin/bash, -c, "command"
-		add.Command[2] = strings.Replace(add.Command[2], "BITFUSION_CLIENT_OPT_PATH", optPath+"/opt/bitfusion/*", 1)
+		tmp := add.DeepCopy()
+		tmp.Command[2] = strings.Replace(tmp.Command[2], "BITFUSION_CLIENT_OPT_PATH", optPath+"/opt/bitfusion/*", 1)
 
-		glog.Infof("Command of InitContainer : %v", add.Command[2])
-		value = add
+		glog.Infof("Command of InitContainer : %v", tmp.Command[2])
+		value = tmp
 		path := basePath
 		if first {
 			first = false
-			value = []corev1.Container{add}
+			value = []corev1.Container{*tmp}
 		} else {
 			path = path + "/-"
 		}
