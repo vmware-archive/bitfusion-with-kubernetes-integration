@@ -36,7 +36,7 @@ func addContainer(target, added []corev1.Container, basePath string, bfClientCon
 		index := strings.Index(bfClientConfig.EnvVariable, "/opt/bitfusion")
 		optPath := bfClientConfig.EnvVariable[0:index]
 		// /bin/bash, -c, "command"
-		// The original data cannot be changed, so deep replication is used
+		// The original data cannot be changed, the previous approach resulted in changes to the original data，so deep replication is used
 		container := add.DeepCopy()
 		container.Command[2] = strings.Replace(container.Command[2], "BITFUSION_CLIENT_OPT_PATH", optPath+"/opt/bitfusion/*", 1)
 
@@ -154,7 +154,7 @@ func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]
 	glog.Infof("sidecarConfig.Containers: %v", sidecarConfig.Containers[0].VolumeMounts)
 	glog.Infof("patch: %v", patch)
 
-	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers", bfClientConfig)
+	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers", bfClientConfig, annotations)
 	if err != nil {
 		glog.Errorf("Unable to create json patch for bitfusion resource")
 		return nil, err
@@ -319,7 +319,7 @@ func copySecret(namespace *string) error {
 }
 
 // updateBFResource updates resource name and change container's cmd to add Bitfusion
-func updateBFResource(targets []corev1.Container, basePath string, bfClientConfig BFClientConfig) (patches []patchOperation, e error) {
+func updateBFResource(targets []corev1.Container, basePath string, bfClientConfig BFClientConfig, annotations map[string]string) (patches []patchOperation, e error) {
 	if len(targets) == 0 {
 		return patches, nil
 	}
@@ -375,7 +375,11 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 						glog.Error("Memory value Error")
 						return patches, fmt.Errorf("Memory value Error ")
 					}
-					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
+					if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
+						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d --filter %s", gpuNum.String(), m, value)
+					} else {
+						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
+					}
 					delete(target.Resources.Requests, bitFusionGPUResourceMemory)
 					delete(target.Resources.Limits, bitFusionGPUResourceMemory)
 				} else {
@@ -384,8 +388,13 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 
 				}
 			} else {
-				command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f", gpuNum.Value(), float64(gpuPartialNum)/100.0)
+				if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f --filter %s", gpuNum.Value(), float64(gpuPartialNum)/100.0, value)
+				} else {
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f ", gpuNum.Value(), float64(gpuPartialNum)/100.0)
+				}
 			}
+			glog.Infof("Command : %s", command)
 			glog.Infof("Request gpu with num %v", gpuNum.Value())
 			glog.Infof("Request gpu with partial %v", gpuPartial.Value())
 

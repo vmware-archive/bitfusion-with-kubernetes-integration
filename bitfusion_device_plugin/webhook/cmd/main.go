@@ -26,7 +26,9 @@ import (
 func buildBitfusionClientMap(distroInfo *mutatingWebhook.BitfusionClientDistro) *map[string]map[string]mutatingWebhook.BFClientConfig {
 	clientMap := make(map[string]map[string]mutatingWebhook.BFClientConfig)
 	for _, bfClient := range distroInfo.BitfusionClients {
-		clientMap[bfClient.OSVersion] = make(map[string]mutatingWebhook.BFClientConfig)
+		if _, has := clientMap[bfClient.OSVersion]; !has {
+			clientMap[bfClient.OSVersion] = make(map[string]mutatingWebhook.BFClientConfig)
+		}
 		clientMap[bfClient.OSVersion][bfClient.BitfusionVersion] = mutatingWebhook.BFClientConfig{
 			BinaryPath: bfClient.BinaryPath, EnvVariable: bfClient.EnvVariable}
 	}
