@@ -36,15 +36,16 @@ func addContainer(target, added []corev1.Container, basePath string, bfClientCon
 		index := strings.Index(bfClientConfig.EnvVariable, "/opt/bitfusion")
 		optPath := bfClientConfig.EnvVariable[0:index]
 		// /bin/bash, -c, "command"
-		tmp := add.DeepCopy()
-		tmp.Command[2] = strings.Replace(tmp.Command[2], "BITFUSION_CLIENT_OPT_PATH", optPath+"/opt/bitfusion/*", 1)
+		// The original data cannot be changed, so deep replication is used
+		container := add.DeepCopy()
+		container.Command[2] = strings.Replace(container.Command[2], "BITFUSION_CLIENT_OPT_PATH", optPath+"/opt/bitfusion/*", 1)
 
-		glog.Infof("Command of InitContainer : %v", tmp.Command[2])
-		value = tmp
+		glog.Infof("Command of InitContainer : %v", container.Command[2])
+
 		path := basePath
 		if first {
 			first = false
-			value = []corev1.Container{*tmp}
+			value = []corev1.Container{*container}
 		} else {
 			path = path + "/-"
 		}
