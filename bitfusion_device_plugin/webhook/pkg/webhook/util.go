@@ -154,7 +154,7 @@ func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]
 	glog.Infof("sidecarConfig.Containers: %v", sidecarConfig.Containers[0].VolumeMounts)
 	glog.Infof("patch: %v", patch)
 
-	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers", bfClientConfig, annotations)
+	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers", bfClientConfig)
 	if err != nil {
 		glog.Errorf("Unable to create json patch for bitfusion resource")
 		return nil, err
@@ -319,7 +319,7 @@ func copySecret(namespace *string) error {
 }
 
 // updateBFResource updates resource name and change container's cmd to add Bitfusion
-func updateBFResource(targets []corev1.Container, basePath string, bfClientConfig BFClientConfig, annotations map[string]string) (patches []patchOperation, e error) {
+func updateBFResource(targets []corev1.Container, basePath string, bfClientConfig BFClientConfig) (patches []patchOperation, e error) {
 	if len(targets) == 0 {
 		return patches, nil
 	}
@@ -375,11 +375,8 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 						glog.Error("Memory value Error")
 						return patches, fmt.Errorf("Memory value Error ")
 					}
-					if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
-						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d --filter %s", gpuNum.String(), m, value)
-					} else {
-						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
-					}
+
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
 					delete(target.Resources.Requests, bitFusionGPUResourceMemory)
 					delete(target.Resources.Limits, bitFusionGPUResourceMemory)
 				} else {
@@ -388,11 +385,8 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 
 				}
 			} else {
-				if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
-					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f --filter %s", gpuNum.Value(), float64(gpuPartialNum)/100.0, value)
-				} else {
-					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f ", gpuNum.Value(), float64(gpuPartialNum)/100.0)
-				}
+
+				command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f ", gpuNum.Value(), float64(gpuPartialNum)/100.0)
 			}
 			glog.Infof("Command : %s", command)
 			glog.Infof("Request gpu with num %v", gpuNum.Value())
