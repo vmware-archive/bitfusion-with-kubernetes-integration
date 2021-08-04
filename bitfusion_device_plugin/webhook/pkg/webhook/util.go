@@ -36,14 +36,16 @@ func addContainer(target, added []corev1.Container, basePath string, bfClientCon
 		index := strings.Index(bfClientConfig.EnvVariable, "/opt/bitfusion")
 		optPath := bfClientConfig.EnvVariable[0:index]
 		// /bin/bash, -c, "command"
-		add.Command[2] = strings.Replace(add.Command[2], "BITFUSION_CLIENT_OPT_PATH", optPath+"/opt/bitfusion/*", 1)
+		// The original data cannot be changed, the previous approach resulted in changes to the original data，so deep replication is used
+		container := add.DeepCopy()
+		container.Command[2] = strings.Replace(container.Command[2], "BITFUSION_CLIENT_OPT_PATH", optPath+"/opt/bitfusion/*", 1)
 
-		glog.Infof("Command of InitContainer : %v", add.Command[2])
-		value = add
+		glog.Infof("Command of InitContainer : %v", container.Command[2])
+
 		path := basePath
 		if first {
 			first = false
-			value = []corev1.Container{add}
+			value = []corev1.Container{*container}
 		} else {
 			path = path + "/-"
 		}
@@ -373,6 +375,7 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 						glog.Error("Memory value Error")
 						return patches, fmt.Errorf("Memory value Error ")
 					}
+
 					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
 					delete(target.Resources.Requests, bitFusionGPUResourceMemory)
 					delete(target.Resources.Limits, bitFusionGPUResourceMemory)
@@ -382,8 +385,10 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 
 				}
 			} else {
-				command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f", gpuNum.Value(), float64(gpuPartialNum)/100.0)
+
+				command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f ", gpuNum.Value(), float64(gpuPartialNum)/100.0)
 			}
+			glog.Infof("Command : %s", command)
 			glog.Infof("Request gpu with num %v", gpuNum.Value())
 			glog.Infof("Request gpu with partial %v", gpuPartial.Value())
 
