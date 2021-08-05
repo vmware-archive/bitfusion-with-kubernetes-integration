@@ -215,7 +215,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 	if annotations == nil {
 		annotations = map[string]string{}
 	}
-	annotations[admissionWebhookAnnotationStatusKey] = "injected"
+
 	patchBytes, err := createPatch(&pod, whsvr.SidecarConfig, annotations, clientMap[os][bfVersion])
 	if err != nil {
 		response.Result = &metav1.Status{Message: err.Error()}

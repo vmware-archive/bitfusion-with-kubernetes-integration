@@ -147,7 +147,8 @@ func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]
 	initContainers := updateInitContainersResources(pod.Spec.Containers, sidecarConfig.InitContainers)
 	patch = append(patch, addContainer(pod.Spec.InitContainers, initContainers, "/spec/initContainers", bfClientConfig)...)
 	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
-	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
+	// Need to delete the other annotations
+	patch = append(patch, updateAnnotation(pod.Annotations, map[string]string{admissionWebhookAnnotationStatusKey: "injected"})...)
 	patch = append(patch, updateContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers", bfClientConfig)...)
 
 	glog.Infof("sidecarConfig: %v", sidecarConfig.InitContainers)
