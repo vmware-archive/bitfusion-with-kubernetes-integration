@@ -22,10 +22,6 @@ data:
         OSVersion: centos8
         BinaryPath: /bitfusion/bitfusion-client-centos8-2.5.1-13/usr/bin/bitfusion
         EnvVariable: /bitfusion/bitfusion-client-centos8-2.5.1-13/opt/bitfusion/2.5.1-3ddd3278/x86_64-linux-gnu/lib:$LD_LIBRARY_PATH
-      - BitfusionVersion: "400"
-        OSVersion: ubuntu18
-        BinaryPath: /bitfusion/bitfusion-client-ubuntu1804_4.0.0/usr/bin/bitfusion
-        EnvVariable: /bitfusion/bitfusion-client-ubuntu1804_4.0.0/opt/bitfusion/lib/x86_64-linux-gnu/lib/:$LD_LIBRARY_PATH
       - BitfusionVersion: "350"
         OSVersion: ubuntu18
         BinaryPath: /bitfusion/bitfusion-client-ubuntu1804_3.5.0-5/usr/bin/bitfusion
