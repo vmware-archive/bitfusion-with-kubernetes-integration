@@ -377,7 +377,11 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 						return patches, fmt.Errorf("Memory value Error ")
 					}
 					if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
-						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d --filter %s", gpuNum.String(), m, value)
+						filter := ""
+						for _, v := range strings.Fields(value) {
+							filter += " --filter " + v
+						}
+						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d  %s", gpuNum.String(), m, filter)
 					} else {
 						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
 					}
@@ -390,7 +394,11 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 				}
 			} else {
 				if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
-					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f --filter %s", gpuNum.Value(), float64(gpuPartialNum)/100.0, value)
+					filter := ""
+					for _, v := range strings.Fields(value) {
+						filter += " --filter " + v
+					}
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f %s", gpuNum.Value(), float64(gpuPartialNum)/100.0, filter)
 				} else {
 					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f ", gpuNum.Value(), float64(gpuPartialNum)/100.0)
 				}
