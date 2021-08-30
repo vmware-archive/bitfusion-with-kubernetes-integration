@@ -68,3 +68,4 @@ data:
         items:
           - key: servers.conf
             path: servers.conf
+            mode: 0777
