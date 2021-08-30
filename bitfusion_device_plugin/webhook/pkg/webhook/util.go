@@ -376,6 +376,7 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 						glog.Error("Memory value Error")
 						return patches, fmt.Errorf("Memory value Error ")
 					}
+
 					if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
 						filter := ""
 						for _, v := range strings.Fields(value) {
@@ -385,6 +386,7 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 					} else {
 						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
 					}
+
 					delete(target.Resources.Requests, bitFusionGPUResourceMemory)
 					delete(target.Resources.Limits, bitFusionGPUResourceMemory)
 				} else {
@@ -393,6 +395,7 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 
 				}
 			} else {
+
 				if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
 					filter := ""
 					for _, v := range strings.Fields(value) {
@@ -402,6 +405,7 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 				} else {
 					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f ", gpuNum.Value(), float64(gpuPartialNum)/100.0)
 				}
+
 			}
 			glog.Infof("Command : %s", command)
 			glog.Infof("Request gpu with num %v", gpuNum.Value())
