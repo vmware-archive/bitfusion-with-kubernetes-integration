@@ -60,6 +60,7 @@ var ignoredNamespaces = []string{
 const (
 	guestOS                             = "bitfusion-client/os"
 	bfVersion                           = "bitfusion-client/version"
+	admissionWebhookAnnotationFilterKey = "bitfusion-client/filter"
 	admissionWebhookAnnotationInjectKey = "auto-management/bitfusion"
 	admissionWebhookAnnotationStatusKey = "auto-management/status"
 	// "~1" is used for escape (http://jsonpatch.com/)
@@ -207,7 +208,14 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 	}
 
 	applyDefaultsWorkaround(whsvr.SidecarConfig.Containers, whsvr.SidecarConfig.Volumes)
-	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
+	//annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
+	// Adding support for the filter parameter requires obtaining the metadata content
+	metadata := &pod.ObjectMeta
+	annotations := metadata.GetAnnotations()
+	if annotations == nil {
+		annotations = map[string]string{}
+	}
+
 	patchBytes, err := createPatch(&pod, whsvr.SidecarConfig, annotations, clientMap[os][bfVersion])
 	if err != nil {
 		response.Result = &metav1.Status{Message: err.Error()}

@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    auto-management/bitfusion: "all"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "400"
+    bitfusion-client/filter: "server.hostname=bf-server"
+  name: bf-pkgs
+  namespace: tensorflow-benchmark
+spec:
+  containers:
+    - image: nvcr.io/nvidia/tensorflow:19.07-py3
+      imagePullPolicy: IfNotPresent
+      name: bf-pkgs
+      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+      resources:
+        limits:
+          bitfusion.io/gpu-amount: 1
+          bitfusion.io/gpu-percent: 50
+      volumeMounts:
+        - name: code
+          mountPath: /benchmark
+  volumes:
+    - name: code
+      hostPath:
+        path: /home/benchmarks

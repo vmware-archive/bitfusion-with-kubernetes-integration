@@ -147,14 +147,15 @@ func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]
 	initContainers := updateInitContainersResources(pod.Spec.Containers, sidecarConfig.InitContainers)
 	patch = append(patch, addContainer(pod.Spec.InitContainers, initContainers, "/spec/initContainers", bfClientConfig)...)
 	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
-	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
+	// Need to delete the other annotations
+	patch = append(patch, updateAnnotation(pod.Annotations, map[string]string{admissionWebhookAnnotationStatusKey: "injected"})...)
 	patch = append(patch, updateContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers", bfClientConfig)...)
 
 	glog.Infof("sidecarConfig: %v", sidecarConfig.InitContainers)
 	glog.Infof("sidecarConfig.Containers: %v", sidecarConfig.Containers[0].VolumeMounts)
 	glog.Infof("patch: %v", patch)
 
-	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers", bfClientConfig)
+	bfPatch, err := updateBFResource(pod.Spec.Containers, "/spec/containers", bfClientConfig, annotations)
 	if err != nil {
 		glog.Errorf("Unable to create json patch for bitfusion resource")
 		return nil, err
@@ -319,7 +320,7 @@ func copySecret(namespace *string) error {
 }
 
 // updateBFResource updates resource name and change container's cmd to add Bitfusion
-func updateBFResource(targets []corev1.Container, basePath string, bfClientConfig BFClientConfig) (patches []patchOperation, e error) {
+func updateBFResource(targets []corev1.Container, basePath string, bfClientConfig BFClientConfig, annotations map[string]string) (patches []patchOperation, e error) {
 	if len(targets) == 0 {
 		return patches, nil
 	}
@@ -376,7 +377,16 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 						return patches, fmt.Errorf("Memory value Error ")
 					}
 
-					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
+					if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
+						filter := ""
+						for _, v := range strings.Fields(value) {
+							filter += " --filter " + v
+						}
+						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d  %s", gpuNum.String(), m, filter)
+					} else {
+						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
+					}
+
 					delete(target.Resources.Requests, bitFusionGPUResourceMemory)
 					delete(target.Resources.Limits, bitFusionGPUResourceMemory)
 				} else {
@@ -386,7 +396,16 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 				}
 			} else {
 
-				command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f ", gpuNum.Value(), float64(gpuPartialNum)/100.0)
+				if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
+					filter := ""
+					for _, v := range strings.Fields(value) {
+						filter += " --filter " + v
+					}
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f %s", gpuNum.Value(), float64(gpuPartialNum)/100.0, filter)
+				} else {
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f ", gpuNum.Value(), float64(gpuPartialNum)/100.0)
+				}
+
 			}
 			glog.Infof("Command : %s", command)
 			glog.Infof("Request gpu with num %v", gpuNum.Value())
