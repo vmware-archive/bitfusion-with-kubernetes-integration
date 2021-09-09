@@ -11,6 +11,7 @@ data:
       command: [/bin/bash, -c, "
           cp -ra /bitfusion/* /bitfusion-distro/ &&
           cp /root/.bitfusion/client.yaml /client &&
+          cp /root/.bitfusion/servers.conf /client &&
           cp -r BITFUSION_CLIENT_OPT_PATH /workload-container-opt
           "]
       volumeMounts:
@@ -21,6 +22,9 @@ data:
       - name: client-from-secret
         mountPath: /root/.bitfusion/client.yaml
         subPath: client.yaml
+      - name: servers-from-secret
+        mountPath: /root/.bitfusion/servers.conf
+        subPath: servers.conf
       - name: bitfusion-opt
         mountPath: /workload-container-opt
     containers:
@@ -35,7 +39,7 @@ data:
       - name: client-dir
         mountPath: /root/.bitfusion/client.yaml
         subPath: client.yaml
-      - name: servers-from-secret
+      - name: client-dir
         mountPath: /root/.bitfusion/servers.conf
         subPath: servers.conf
       - name: bitfusion-distro
@@ -68,4 +72,5 @@ data:
         items:
           - key: servers.conf
             path: servers.conf
-            readOnly: false
+            mode: 0777
+
