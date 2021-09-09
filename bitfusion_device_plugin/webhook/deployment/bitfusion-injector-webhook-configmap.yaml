@@ -36,7 +36,7 @@ data:
         mountPath: /root/.bitfusion/client.yaml
         subPath: client.yaml
       - name: servers-from-secret
-        mountPath: /etc/bitfusion/servers.conf
+        mountPath: /etc/bitfusion
         subPath: servers.conf
       - name: bitfusion-distro
         mountPath: /bitfusion
