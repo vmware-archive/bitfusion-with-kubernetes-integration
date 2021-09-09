@@ -676,6 +676,18 @@ $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```
 
+If the following error occurs when running POD, modify the Serve.conf file in the tokens directory
+![img](diagrams/trouble-2.png) 
+Change the servers.conf file to the following format
+![img](diagrams/trouble-2-1.png) 
+
+Then re-run the following command to create secret 
+```
+$ kubectl delete secret -n kube-system bitfusion-secret  
+$ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret  
+$ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
+```
+
 ## 7. Note
 
 ### 7.1. The environment variable of LD_LIBRARY_PATH
