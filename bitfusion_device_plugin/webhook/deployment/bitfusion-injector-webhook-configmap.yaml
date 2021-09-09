@@ -35,9 +35,6 @@ data:
       - name: client-dir
         mountPath: /root/.bitfusion/client.yaml
         subPath: client.yaml
-      - name: servers-from-secret
-        mountPath: /etc/bitfusion
-        subPath: servers.conf
       - name: bitfusion-distro
         mountPath: /bitfusion
       - name: bitfusion-opt
@@ -55,6 +52,9 @@ data:
         items:
           - key: ca.crt
             path: tls/ca.crt
+          - key: servers.conf
+            path: servers.conf
+            mode: 0777
     - name: client-from-secret
       secret:
         secretName: bitfusion-secret
@@ -62,10 +62,4 @@ data:
           - key: client.yaml
             path: client.yaml
             mode: 0600
-    - name: servers-from-secret
-      secret:
-        secretName: bitfusion-secret
-        items:
-          - key: servers.conf
-            path: servers.conf
-            mode: 0777
+
