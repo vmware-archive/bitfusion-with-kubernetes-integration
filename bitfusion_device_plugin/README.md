@@ -94,6 +94,20 @@ tokens
 
 ```
 
+If you are using Bitfusion client version 3.5 or 4.0, please update the servers.conf file as follows
+```
+# Source file content
+servers:
+- addresses:
+  - 10.202.122.248:56001
+  
+# Modified file contents
+servers:
+- reachable:10.202.122.248:56001
+  addresses:
+  - 10.202.122.248:56001
+```
+
 Then use the following command to create a secret in Kubernetes in the namespace of kube-system:  
 
 ```shell
