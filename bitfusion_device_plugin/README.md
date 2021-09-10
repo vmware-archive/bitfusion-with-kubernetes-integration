@@ -253,6 +253,12 @@ NAME                          TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   
 bwki-webhook-svc              ClusterIP   10.101.39.4   <none>        443/TCP   76m
 ```
 
+### 3.4. Uninstall
+
+Uninstall the program and clean up all cache files using the following command:
+```bash
+$ make uninstall
+```
 
 ## 4. Using Bitfusion GPU in Kubernetes workload 
 
@@ -283,7 +289,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "250"
+    bitfusion-client/version: "350"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
@@ -331,7 +337,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "250"
+    bitfusion-client/version: "350"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
@@ -541,6 +547,86 @@ Finally, use the following command to remove POD:
 
 ```
 $ kubectl delete -f example/pod.yaml
+```
+
+### 4.4. The configuration of "bitfusion-client/filter parameter"
+
+Bitfusion added the filter parameter in version 4.0.The filter parameter has:
+- server.addr (for example: server.addr=10.117.32.177)
+- server.hostname (for example: server.hostname=bf-server)
+- server.has-rdma (for example: server.has-rdma=true)
+- server.cuda-version (for example: server.cuda-version=11.2)
+- server.dirver-version (for example: server.dirver-version=460.73.01)
+- device.id (for example: device.id=0)
+- device.name (for example: device.name=Tesla)
+- device.phy-memory (for example: device.phy-memory=16160)
+
+Using feilter requires the addition of annotations for  **bitfusion-client/filter**
+
+```yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    auto-management/bitfusion: "all"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "400"
+    # Use a single filter condition
+    bitfusion-client/filter: "server.hostname=bf-server"
+  name: bf-pkgs
+  namespace: tensorflow-benchmark
+spec:
+  containers:
+    - image: nvcr.io/nvidia/tensorflow:19.07-py3
+      imagePullPolicy: IfNotPresent
+      name: bf-pkgs
+      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+      resources:
+        limits:
+          bitfusion.io/gpu-amount: 1
+          bitfusion.io/gpu-percent: 50
+      volumeMounts:
+        - name: code
+          mountPath: /benchmark
+  volumes:
+    - name: code
+      hostPath:
+        path: /home/benchmarks
+
+```
+
+```yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    auto-management/bitfusion: "all"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "400"
+    # Use multiple filter criteria
+    bitfusion-client/filter: "server.hostname=bf-server server.addr=192.168.1.1 server.hostname=bf-server2"
+  name: bf-pkgs
+  namespace: tensorflow-benchmark
+spec:
+  containers:
+    - image: nvcr.io/nvidia/tensorflow:19.07-py3
+      imagePullPolicy: IfNotPresent
+      name: bf-pkgs
+      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+      resources:
+        limits:
+          bitfusion.io/gpu-amount: 1
+          bitfusion.io/gpu-percent: 50
+      volumeMounts:
+        - name: code
+          mountPath: /benchmark
+  volumes:
+    - name: code
+      hostPath:
+        path: /home/benchmarks
+
 ```
 
 ## 5.  Resource Quota (optional)
