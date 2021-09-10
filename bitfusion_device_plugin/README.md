@@ -94,7 +94,7 @@ tokens
 
 ```
 
-If you are using Bitfusion client version 3.5 or 4.0, please update the servers.conf file as follows
+If we want to use Bitfusion client version 3.5 or 4.0, please update the servers.conf file as follows
 ```
 # Source file content
 servers:
