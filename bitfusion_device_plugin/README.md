@@ -781,7 +781,7 @@ $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-syst
 
 If the following error occurs when running POD, modify the Serve.conf file in the tokens directory
 ![img](diagrams/trouble-2.png) 
-Change the servers.conf file to the following format
+Change the servers.conf file to the following format.The ACTUAL IP address prevails
 ![img](diagrams/trouble-2-1.png) 
 
 Then re-run the following command to create secret 
