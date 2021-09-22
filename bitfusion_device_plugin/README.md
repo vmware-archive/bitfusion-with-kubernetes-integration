@@ -34,8 +34,9 @@ bitfusion-webhook runs as a Deployment on the Kubernetes master node.
 -  Ubuntu Linux as the operating system of the installation machine 
 -  OpenSSL needs to be installed on Ubuntu
 -  Kubernetes 1.17+
--  Bitfusion 2.5+
+-  Bitfusion 3.5+
 -  kubectl and docker command are ready to use.  
+-  need to specify the command field in the POD
 
 
 
@@ -92,6 +93,22 @@ tokens
 ├── client.yaml  
 └── servers.conf  
 
+```
+
+If we want to use Bitfusion client version 3.5 or 4.0, please update the servers.conf file as follows:
+```
+# Source file content
+servers:
+- addresses:
+  - 10.202.122.248:56001
+```
+Change the file above to
+```
+# Modified file contents
+servers:
+- reachable:10.202.122.248:56001
+  addresses:
+  - 10.202.122.248:56001
 ```
 
 Then use the following command to create a secret in Kubernetes in the namespace of kube-system:  
@@ -239,6 +256,12 @@ NAME                          TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   
 bwki-webhook-svc              ClusterIP   10.101.39.4   <none>        443/TCP   76m
 ```
 
+### 3.4. Uninstall
+
+Uninstall the program and clean up all cache files using the following command:
+```bash
+$ make uninstall
+```
 
 ## 4. Using Bitfusion GPU in Kubernetes workload 
 
@@ -252,7 +275,8 @@ After completing the installation, users can write a YAML file of Kubernetes to 
 | bitfusion.io/gpu-percent  | positive integer                        |Percentage of the memory of each GPU|
 | bitfusion.io/gpu-memory   | positive integer                        |Memory size of each GPU,The default unit is bit.It can be used with the K8s native memory application unit (Mi,M,G,Gi)|
 | bitfusion-client/os       | ubuntu18 / ubuntu20 / centos7 / centos8 |The OS of the containers that use the Bitfusion client|
-| bitfusion-client/version  | 250/350/400                             |The version of Bitfusion client to be used in this container is 2.5 or 3.5 or 4.0|
+| bitfusion-client/version  | 350/400                             |The version of Bitfusion client to be used in this container is 3.5 or 4.0|
+
 
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
 
@@ -269,7 +293,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "250"
+    bitfusion-client/version: "350"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
@@ -317,7 +341,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "250"
+    bitfusion-client/version: "350"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
@@ -529,6 +553,86 @@ Finally, use the following command to remove POD:
 $ kubectl delete -f example/pod.yaml
 ```
 
+### 4.4. The configuration of "bitfusion-client/filter parameter"
+
+Bitfusion added the filter parameter in version 4.0.The filter parameter has:
+- server.addr (for example: server.addr=10.117.32.177)
+- server.hostname (for example: server.hostname=bf-server)
+- server.has-rdma (for example: server.has-rdma=true)
+- server.cuda-version (for example: server.cuda-version=11.2)
+- server.dirver-version (for example: server.dirver-version=460.73.01)
+- device.id (for example: device.id=0)
+- device.name (for example: device.name=Tesla)
+- device.phy-memory (for example: device.phy-memory=16160)
+
+Using feilter requires the addition of annotations for  **bitfusion-client/filter**
+
+```yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    auto-management/bitfusion: "all"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "400"
+    # Use a single filter condition
+    bitfusion-client/filter: "server.hostname=bf-server"
+  name: bf-pkgs
+  namespace: tensorflow-benchmark
+spec:
+  containers:
+    - image: nvcr.io/nvidia/tensorflow:19.07-py3
+      imagePullPolicy: IfNotPresent
+      name: bf-pkgs
+      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+      resources:
+        limits:
+          bitfusion.io/gpu-amount: 1
+          bitfusion.io/gpu-percent: 50
+      volumeMounts:
+        - name: code
+          mountPath: /benchmark
+  volumes:
+    - name: code
+      hostPath:
+        path: /home/benchmarks
+
+```
+
+```yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    auto-management/bitfusion: "all"
+    bitfusion-client/os: "ubuntu18"
+    bitfusion-client/version: "400"
+    # Use multiple filter criteria
+    bitfusion-client/filter: "server.hostname=bf-server server.addr=192.168.1.1 server.hostname=bf-server2"
+  name: bf-pkgs
+  namespace: tensorflow-benchmark
+spec:
+  containers:
+    - image: nvcr.io/nvidia/tensorflow:19.07-py3
+      imagePullPolicy: IfNotPresent
+      name: bf-pkgs
+      command: ["python /benchmark/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py --local_parameter_device=gpu --batch_size=32 --model=inception3"]
+      resources:
+        limits:
+          bitfusion.io/gpu-amount: 1
+          bitfusion.io/gpu-percent: 50
+      volumeMounts:
+        - name: code
+          mountPath: /benchmark
+  volumes:
+    - name: code
+      hostPath:
+        path: /home/benchmarks
+
+```
+
 ## 5.  Resource Quota (optional)
 ### 5.1. Enforce Quota
 
@@ -670,6 +774,18 @@ Check the validity of the **Baremetal token** from vCenter Bitfusion Plugin.
 Re-download a new valid token and use the following commands to update the secret in Kubernetes:  (Make sure to delete all the stale bitfusion-secret in each namespace of Kubernetes)
 
 
+```
+$ kubectl delete secret -n kube-system bitfusion-secret  
+$ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret  
+$ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
+```
+
+If the following error occurs when running POD, modify the Serve.conf file in the tokens directory
+![img](diagrams/trouble-2.png) 
+Change the servers.conf file to the following format.The ACTUAL IP address prevails
+![img](diagrams/trouble-2-1.png) 
+
+Then re-run the following command to create secret 
 ```
 $ kubectl delete secret -n kube-system bitfusion-secret  
 $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret  

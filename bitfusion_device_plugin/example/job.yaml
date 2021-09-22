@@ -7,9 +7,9 @@ spec:
   template:
     metadata:
       annotations:
-        auto-management/bitfusion: "yes"
+        auto-management/bitfusion: "all"
         bitfusion-client/os: "ubuntu18"
-        bitfusion-client/version: "250"
+        bitfusion-client/version: "350"
       name: bf-pkgs
     spec:
       restartPolicy: OnFailure
