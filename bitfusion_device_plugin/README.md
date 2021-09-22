@@ -277,6 +277,7 @@ After completing the installation, users can write a YAML file of Kubernetes to 
 | bitfusion-client/os       | ubuntu18 / ubuntu20 / centos7 / centos8 |The OS of the containers that use the Bitfusion client|
 | bitfusion-client/version  | 350/400                             |The version of Bitfusion client to be used in this container is 3.5 or 4.0|
 
+
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
 
 There are two options to specify the Bitfusion resource which the workload request.
