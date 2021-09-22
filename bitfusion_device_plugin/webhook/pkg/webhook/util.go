@@ -147,8 +147,7 @@ func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]
 	initContainers := updateInitContainersResources(pod.Spec.Containers, sidecarConfig.InitContainers)
 	patch = append(patch, addContainer(pod.Spec.InitContainers, initContainers, "/spec/initContainers", bfClientConfig)...)
 	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
-	// Need to delete the other annotations
-	patch = append(patch, updateAnnotation(pod.Annotations, map[string]string{admissionWebhookAnnotationStatusKey: "injected"})...)
+	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
 	patch = append(patch, updateContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers", bfClientConfig)...)
 
 	glog.Infof("sidecarConfig: %v", sidecarConfig.InitContainers)
@@ -378,11 +377,7 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 					}
 
 					if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
-						filter := ""
-						for _, v := range strings.Fields(value) {
-							filter += " --filter " + v
-						}
-						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d  %s", gpuNum.String(), m, filter)
+						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d --filter %s", gpuNum.String(), m, value)
 					} else {
 						command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %s -m %d", gpuNum.String(), m)
 					}
@@ -397,11 +392,7 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 			} else {
 
 				if value, has := annotations[admissionWebhookAnnotationFilterKey]; has {
-					filter := ""
-					for _, v := range strings.Fields(value) {
-						filter += " --filter " + v
-					}
-					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f %s", gpuNum.Value(), float64(gpuPartialNum)/100.0, filter)
+					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f --filter %s", gpuNum.Value(), float64(gpuPartialNum)/100.0, value)
 				} else {
 					command = fmt.Sprintf(bfClientConfig.BinaryPath+" run -n %d -p %f ", gpuNum.Value(), float64(gpuPartialNum)/100.0)
 				}
