@@ -277,7 +277,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "350"
+    bitfusion-client/version: "400"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
@@ -325,7 +325,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "350"
+    bitfusion-client/version: "400"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
