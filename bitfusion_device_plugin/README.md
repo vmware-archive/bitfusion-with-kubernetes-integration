@@ -792,6 +792,9 @@ $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```
 
+If the following error occurs when running POD, please check the k8s environment 's network connection
+![img](diagrams/trouble-connect-error.png)
+
 ## 7. Note
 
 ### 7.1. The environment variable of LD_LIBRARY_PATH
