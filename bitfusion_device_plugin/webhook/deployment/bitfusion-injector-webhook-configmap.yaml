@@ -35,7 +35,8 @@ data:
         value: "$LD_LIBRARY_PATH"
       volumeMounts:
       - name: ca
-        mountPath: /etc/bitfusion
+        mountPath: /etc/bitfusion/tls/ca.crt
+        subPath: tls/ca.crt
       - name: client-dir
         mountPath: /root/.bitfusion/client.yaml
         subPath: client.yaml
