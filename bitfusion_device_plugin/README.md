@@ -34,7 +34,7 @@ bitfusion-webhook runs as a Deployment on the Kubernetes master node.
 -  Ubuntu Linux as the operating system of the installation machine 
 -  OpenSSL needs to be installed on Ubuntu
 -  Kubernetes 1.17+
--  Bitfusion 3.5+
+-  Bitfusion 4.0.1+
 -  kubectl and docker command are ready to use.  
 -  need to specify the command field in the POD
 
@@ -93,22 +93,6 @@ tokens
 ├── client.yaml  
 └── servers.conf  
 
-```
-
-If we want to use Bitfusion client version 3.5 or 4.0, please update the servers.conf file as follows:
-```
-# Source file content
-servers:
-- addresses:
-  - 10.202.122.248:56001
-```
-Change the file above to
-```
-# Modified file contents
-servers:
-- reachable:10.202.122.248:56001
-  addresses:
-  - 10.202.122.248:56001
 ```
 
 Then use the following command to create a secret in Kubernetes in the namespace of kube-system:  
