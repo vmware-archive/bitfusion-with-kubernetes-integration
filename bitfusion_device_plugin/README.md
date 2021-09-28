@@ -259,7 +259,7 @@ After completing the installation, users can write a YAML file of Kubernetes to 
 | bitfusion.io/gpu-percent  | positive integer                        |Percentage of the memory of each GPU|
 | bitfusion.io/gpu-memory   | positive integer                        |Memory size of each GPU,The default unit is bit.It can be used with the K8s native memory application unit (Mi,M,G,Gi)|
 | bitfusion-client/os       | ubuntu18 / ubuntu20 / centos7 / centos8 |The OS of the containers that use the Bitfusion client|
-| bitfusion-client/version  | 400                             |The version of Bitfusion client to be used in this container is 3.5 or 4.0|
+| bitfusion-client/version  | 401                             |The version of Bitfusion client to be used in this container is 3.5 or 4.0|
 
 
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
@@ -277,7 +277,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "400"
+    bitfusion-client/version: "401"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
@@ -325,7 +325,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "400"
+    bitfusion-client/version: "401"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
@@ -559,7 +559,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "400"
+    bitfusion-client/version: "401"
     # Use a single filter condition
     bitfusion-client/filter: "server.hostname=bf-server"
   name: bf-pkgs
@@ -592,7 +592,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "400"
+    bitfusion-client/version: "401"
     # Use multiple filter criteria
     bitfusion-client/filter: "server.hostname=bf-server server.addr=192.168.1.1 server.hostname=bf-server2"
   name: bf-pkgs
@@ -704,7 +704,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "400"
+    bitfusion-client/version: "401"
   name: bf-pkgs
   namespace: tensorflow-benchmark
 spec:
