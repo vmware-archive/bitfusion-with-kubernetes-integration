@@ -426,7 +426,7 @@ func updateBFResource(targets []corev1.Container, basePath string, bfClientConfi
 					hasPrefix = true
 				}
 
-				command += " " + v
+				command += " -- " + v
 
 			}
 			if !hasPrefix && injectionStatus != bitFusionOnlyInjection {
