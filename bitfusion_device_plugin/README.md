@@ -34,7 +34,7 @@ bitfusion-webhook runs as a Deployment on the Kubernetes master node.
 -  Ubuntu Linux as the operating system of the installation machine 
 -  OpenSSL needs to be installed on Ubuntu
 -  Kubernetes 1.17+
--  Bitfusion 4.0.1+
+-  Bitfusion 3.5 and 4.0.1 
 -  kubectl and docker command are ready to use.  
 -  need to specify the command field in the POD
 
@@ -95,6 +95,23 @@ tokens
 
 ```
 
+If we want to use Bitfusion client version 3.5, please update the servers.conf file as follows:
+
+```
+# Source file content
+servers:
+- addresses:
+  - 10.202.122.248:56001
+Change the file above to
+```
+```
+# Modified file contents
+servers:
+- reachable:10.202.122.248:56001
+  addresses:
+  - 10.202.122.248:56001
+```
+
 Then use the following command to create a secret in Kubernetes in the namespace of kube-system:  
 
 ```shell
@@ -150,7 +167,7 @@ IMAGE_REPO ?= docker.io/bitfusiondeviceplugin
 DEVICE_IMAGE_NAME ?= bitfusion-device-plugin
 WEBHOOK_IMAGE_NAME ?= bitfusion-webhook
 PKG_IMAGE_NAME ?= bitfusion-client
-IMAGE_TAG  ?= 0.2.3
+IMAGE_TAG  ?= 0.3
 ```
 
 Now start building images using the command below:
@@ -163,9 +180,9 @@ If everything works well, use the following command to check images:
 ```shell
 $ docker images
 REPOSITORY                                                                         TAG
-docker.io/bitfusiondeviceplugin/bitfusion-device-plugin                            0.2                 
-docker.io/bitfusiondeviceplugin/bitfusion-webhook                                  0.2                 
-docker.io/bitfusiondeviceplugin/bitfusion-client                                   0.2         
+docker.io/bitfusiondeviceplugin/bitfusion-device-plugin                            0.3                 
+docker.io/bitfusiondeviceplugin/bitfusion-webhook                                  0.3                 
+docker.io/bitfusiondeviceplugin/bitfusion-client                                   0.3         
 
 ```
 
@@ -259,7 +276,7 @@ After completing the installation, users can write a YAML file of Kubernetes to 
 | bitfusion.io/gpu-percent  | positive integer                        |Percentage of the memory of each GPU|
 | bitfusion.io/gpu-memory   | positive integer                        |Memory size of each GPU,The default unit is bit.It can be used with the K8s native memory application unit (Mi,M,G,Gi)|
 | bitfusion-client/os       | ubuntu18 / ubuntu20 / centos7 / centos8 |The OS of the containers that use the Bitfusion client|
-| bitfusion-client/version  | 401                             |The version of Bitfusion client to be used in this container is 3.5 or 4.0.1|
+| bitfusion-client/version  | 350/401                             |The version of Bitfusion client to be used in this container is 3.5 or 4.0.1|
 
 
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
@@ -829,10 +846,10 @@ After that run the "make deploy" command to start the deployment.
 
 Below is another image regsitry for users to get the docker images.
 ```shell
-ccr.ccs.tencentyun.com/bitfusion/bitfusion-device-plugin:0.2
+ccr.ccs.tencentyun.com/bitfusion/bitfusion-device-plugin:0.3
 
-ccr.ccs.tencentyun.com/bitfusion/bitfusion-webhook:0.2
+ccr.ccs.tencentyun.com/bitfusion/bitfusion-webhook:0.3
 
-ccr.ccs.tencentyun.com/bitfusion/bitfusion-client:0.2
+ccr.ccs.tencentyun.com/bitfusion/bitfusion-client:0.3
 ```
 
