@@ -102,8 +102,9 @@ If we want to use Bitfusion client version 3.5, please update the servers.conf f
 servers:
 - addresses:
   - 10.202.122.248:56001
-Change the file above to
 ```
+Change the file above to
+
 ```
 # Modified file contents
 servers:
