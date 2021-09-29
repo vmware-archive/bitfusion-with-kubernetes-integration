@@ -675,7 +675,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "400"
+    bitfusion-client/version: "401"
   name: bf-pkgs
   namespace: tensorflow-benchmark
 spec:
