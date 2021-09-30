@@ -11,6 +11,7 @@ data:
       command: [/bin/bash, -c, "
           cp -ra /bitfusion/* /bitfusion-distro/ &&
           cp /root/.bitfusion/client.yaml /client &&
+          cp /root/.bitfusion/servers.conf /client &&
           cp -r BITFUSION_CLIENT_OPT_PATH /workload-container-opt
           "]
       volumeMounts:
@@ -21,6 +22,9 @@ data:
       - name: client-from-secret
         mountPath: /root/.bitfusion/client.yaml
         subPath: client.yaml
+      - name: servers-from-secret
+        mountPath: /root/.bitfusion/servers.conf
+        subPath: servers.conf
       - name: bitfusion-opt
         mountPath: /workload-container-opt
     containers:
@@ -31,12 +35,13 @@ data:
         value: "$LD_LIBRARY_PATH"
       volumeMounts:
       - name: ca
-        mountPath: /etc/bitfusion
+        mountPath: /etc/bitfusion/tls/ca.crt
+        subPath: tls/ca.crt
       - name: client-dir
         mountPath: /root/.bitfusion/client.yaml
         subPath: client.yaml
-      - name: servers-from-secret
-        mountPath: /root/.bitfusion/servers.conf
+      - name: client-dir
+        mountPath: /etc/bitfusion/servers.conf
         subPath: servers.conf
       - name: bitfusion-distro
         mountPath: /bitfusion
