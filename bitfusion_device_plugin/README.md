@@ -79,7 +79,7 @@ For more details, please refer to:
 
 ### 2.3. Create a Kubernetes Secret  using the Baremetal Token
 
-Upload the Baremetal Tokens files to the installation machine. Use the following command to unzip the files:
+Upload the Baremetal Tokens files to the installation machine. Use the following command to unzip the files(**Noote:** the filename of the tar file may be different from the `./2BgkZdN.tar`, please change to your filename):
 
 ```shell
 $ mkdir tokens    
@@ -95,7 +95,7 @@ tokens
 
 ```
 
-If we want to use Bitfusion client version 3.5, please update the servers.conf file as follows:
+If we want to use Bitfusion client version 3.5, please update the `servers.conf` file as follows(**Noote:** the IP address in `servers.conf` may be different from yours, which means to indicate the IP address of the bitfusion server, please change to your own bitfusion server IP address):
 
 ```
 # Source file content
@@ -260,7 +260,7 @@ bwki-webhook-svc              ClusterIP   10.101.39.4   <none>        443/TCP   
 
 ### 3.4. Uninstall
 
-Uninstall the program and clean up all cache files using the following command:
+If you decide uninstall the program and clean up all cache files, you should use the following command:
 ```bash
 $ make uninstall
 ```
@@ -769,7 +769,12 @@ $ kubectl logs -n tensorflow-benchmark   bf-pkgs
 "bf-pkgs" is the pod name.
 
 The logs below indicate some errors of contacting Bitfusion server.
-![img](diagrams/trouble-one.png)   
+```
+root@nodel:~/final-test/bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin# kubectl logs -n tensorflow-benchmark bf-deployment-54c675cbff-sb4bq 
+[INFO] 2021-03-29T01:05:36Z Query server 10.117.32.156:56001 to claim host id: 012b965d-93b8-465f-97eb-eaba51bc3599
+[WARN] 2021-03-29T01:05:37Z Error contacting server 10.117.32.156:56001 to verify client id: Get https://10.117.32.156:56001/claim_id: context deadline exceeded Error: none of the servers responded correctly to client id claim requests.
+root@nodel:~/final-test/bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin# 
+```
 
 
 Check the validity of the **Baremetal token** from vCenter Bitfusion Plugin. 
@@ -782,10 +787,20 @@ $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```
 
-If the following error occurs when running POD, modify the Serve.conf file in the tokens directory
-![img](diagrams/trouble-servers-conf-error.png) 
+- If the following error occurs when running POD, modify the Serve.conf file in the tokens directory
+```
+root@nodel:~/final-test/bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin# kubectl logs -n tensorflow-benchmark bf-pkgs
+[INFO] 2021-03-29T01:05:36Z Query server health status
+[WARN] 2021-03-29T01:05:37Z Failed to parse /root/.bitfusion/servers.conf: open /root/.bitfusion/servers.conf: read-only file system
+Error: none of the servers responded correctly to client id claim requests.
+```
 Change the servers.conf file to the following format.The ACTUAL IP address prevails
-![img](diagrams/trouble-servers-conf-soultion.png) 
+```
+servers:
+- reachable:10.202.122.248:56001
+  addresses:
+  - 10.202.122.248:56001
+```
 
 Then re-run the following command to create secret 
 ```
@@ -794,8 +809,13 @@ $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```
 
-If the following error occurs when running POD, please check the k8s environment 's network connection
-![img](diagrams/trouble-connect-error.png)
+- If the following error occurs when running POD, please check the k8s environment 's network connection
+```
+[rootbf—pkgs bin]# ./bitfusion list_gpus
+[INFO] 2021—09—22T11:24:04Z Query server 10.117.32.156:56001 to claim host id: 1a722830—1d27—4ee9—ac0b-f77c19fb189c
+[WARN] 2021—09—22T11:2405Z Error contacting server 10.117.32.156:56001 to verify client id: Get https://10.117.32.156:56001/claim id: dial tcp 10.117.32.156:56001: i/o timeout
+Error: none of the servers responded correctly to client id claim requests.
+```
 
 ## 7. Note
 
