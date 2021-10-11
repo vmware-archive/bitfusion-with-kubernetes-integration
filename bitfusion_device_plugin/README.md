@@ -1,4 +1,37 @@
-# Bitfusion on Kubernetes ##
+**Table of Contents** 
+
+- [Bitfusion on Kubernetes](#bitfusion-on-kubernetes)
+  - [1. Architecture](#1-architecture)
+  - [2. Prerequisites](#2-prerequisites)
+    - [2.1. Quota configuration](#21-quota-configuration)
+    - [2.2. Get Baremetal Token for authorization](#22-get-baremetal-token-for-authorization)
+    - [2.3. Create a Kubernetes Secret  using the Baremetal Token](#23-create-a-kubernetes-secret--using-the-baremetal-token)
+  - [3. Quick Start](#3-quick-start)
+    - [3.1. Option 1: Using pre-built images (recommended)](#31-option-1-using-pre-built-images-recommended)
+    - [3.2. Option 2: Building images from scratch](#32-option-2-building-images-from-scratch)
+    - [3.3. Verifying the deployment](#33-verifying-the-deployment)
+    - [3.4. Uninstall](#34-uninstall)
+  - [4. Using Bitfusion GPU in Kubernetes workload](#4-using-bitfusion-gpu-in-kubernetes-workload)
+    - [4.1. Option 1: Submit the workload with "gpu-percent" parameter](#41-option-1-submit-the-workload-with-gpu-percent-parameter)
+    - [4.2. Option 2: Submit the workload with "gpu-memory" parameter](#42-option-2-submit-the-workload-with-gpu-memory-parameter)
+    - [4.3. The configuration of "auto-management/bitfusion parameter"](#43-the-configuration-of-auto-managementbitfusion-parameter)
+    - [4.4. The configuration of "bitfusion-client/filter parameter"](#44-the-configuration-of-bitfusion-clientfilter-parameter)
+  - [5.  Resource Quota (optional)](#5--resource-quota-optional)
+    - [5.1. Enforce Quota](#51-enforce-quota)
+    - [5.2. Validate the quota using the following two methods](#52-validate-the-quota-using-the-following-two-methods)
+      - [5.2.1. Using parameter "bitfusion.io/gpu-memory"](#521-using-parameter-bitfusioniogpu-memory)
+      - [5.2.2. Using parameter "bitfusion.io/gpu-percent"](#522-using-parameter-bitfusioniogpu-percent)
+  - [6. Troubleshooting](#6-troubleshooting)
+    - [6.1 context deadline exceeded](#61-context-deadline-exceeded)
+    - [6.2 Porblem of servers.conf file](#62-porblem-of-serversconf-file)
+    - [6.3 dial tcp IP:port: i/o timeout](#63-dial-tcp-ipport-io-timeout)
+  - [7. Note](#7-note)
+    - [7.1. The environment variable of LD_LIBRARY_PATH](#71-the-environment-variable-of-ld_library_path)
+    - [7.2. Deploy the Bitfusion Device Plugin on Tanzu](#72-deploy-the-bitfusion-device-plugin-on-tanzu)
+    - [7.3 Alternative docker image registry](#73-alternative-docker-image-registry)
+
+
+# Bitfusion on Kubernetes #
 
 
 Current solutions of GPU virtualization may have some shortcomings:
@@ -79,7 +112,7 @@ For more details, please refer to:
 
 ### 2.3. Create a Kubernetes Secret  using the Baremetal Token
 
-Upload the Baremetal Tokens files to the installation machine. Use the following command to unzip the files(**Noote:** the filename of the tar file may be different from the `./2BgkZdN.tar`, please change to your filename):
+Upload the Baremetal Tokens files to the installation machine. Use the following command to unzip the files(**<span style="color:red">NOTE:</span>** the filename of the tar file may be different from the `2BgkZdN.tar`, please change to your own filename):
 
 ```shell
 $ mkdir tokens    
@@ -95,7 +128,7 @@ tokens
 
 ```
 
-If we want to use Bitfusion client version 3.5, please update the `servers.conf` file as follows(**Noote:** the IP address in `servers.conf` may be different from yours, which means to indicate the IP address of the bitfusion server, please change to your own bitfusion server IP address):
+If we want to use Bitfusion client version 3.5, please update the `servers.conf` file as follows(**<span style="color:red">NOTE:</span>** the IP address in `servers.conf` may be different from yours, which means to indicate the IP address of the bitfusion server, please change to your own bitfusion server IP address):
 
 ```
 # Source file content
@@ -260,7 +293,7 @@ bwki-webhook-svc              ClusterIP   10.101.39.4   <none>        443/TCP   
 
 ### 3.4. Uninstall
 
-If you decide uninstall the program and clean up all cache files, you should use the following command:
+If you decide to uninstall the program and clean up all cache files, you should use the following command:
 ```bash
 $ make uninstall
 ```
@@ -707,8 +740,15 @@ Use the following command to check the quota consumption:
 ```
 $ kubectl describe quota -n tensorflow-benchmark bitfusion-quota 
 ```
-
-![img](diagrams/quota.png) 
+the outputs should be:
+```
+root@vmware:/home/vmware# kubectl describe quota -n tensorflow-benchmark bitfusion-quota
+Name: bitfuston-quota
+Namespace: tensorflow-benchmark
+Resource                    Used Hard
+--------                    ---- ----
+requests.bttfuston.io/gpu    50 100
+```
 
 #### 5.2.2. Using parameter "bitfusion.io/gpu-percent"
 
@@ -753,14 +793,21 @@ Use the following command to check the quota consumption:
 ```
 $ kubectl describe quota -n tensorflow-benchmark bitfusion-quota 
 ```
-
-![img](diagrams/quota.png) 
+the outputs should be:
+```
+root@vmware:/home/vmware# kubectl describe quota -n tensorflow-benchmark bitfusion-quota
+Name: bitfuston-quota
+Namespace: tensorflow-benchmark
+Resource                    Used Hard
+--------                    ---- ----
+requests.bttfuston.io/gpu    50 100
+```
 
 
 
 ## 6. Troubleshooting
-
-- If the workload did not run successfully, use the command below to check the log of the workload for details.  
+### 6.1 context deadline exceeded
+If the workload did not run successfully, use the command below to check the log of the workload for details.  
 
 ```shell
 $ kubectl logs -n tensorflow-benchmark   bf-pkgs
@@ -787,7 +834,8 @@ $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```
 
-- If the following error occurs when running POD, modify the Serve.conf file in the tokens directory
+### 6.2 Porblem of servers.conf file
+If the following error occurs when running POD, modify the Serve.conf file in the tokens directory
 ```
 root@nodel:~/final-test/bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin# kubectl logs -n tensorflow-benchmark bf-pkgs
 [INFO] 2021-03-29T01:05:36Z Query server health status
@@ -809,7 +857,8 @@ $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```
 
-- If the following error occurs when running POD, please check the k8s environment 's network connection
+### 6.3 dial tcp IP:port: i/o timeout
+If the following error occurs when running POD, please check the k8s environment 's network connection
 ```
 [rootbf—pkgs bin]# ./bitfusion list_gpus
 [INFO] 2021—09—22T11:24:04Z Query server 10.117.32.156:56001 to claim host id: 1a722830—1d27—4ee9—ac0b-f77c19fb189c
