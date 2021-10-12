@@ -1,4 +1,5 @@
-**Table of Contents** 
+# Bitfusion on Kubernetes #
+
 
 - [Bitfusion on Kubernetes](#bitfusion-on-kubernetes)
   - [1. Architecture](#1-architecture)
@@ -30,9 +31,7 @@
     - [7.2. Deploy the Bitfusion Device Plugin on Tanzu](#72-deploy-the-bitfusion-device-plugin-on-tanzu)
     - [7.3 Alternative docker image registry](#73-alternative-docker-image-registry)
 
-
-# Bitfusion on Kubernetes #
-
+* * *
 
 Current solutions of GPU virtualization may have some shortcomings:
 
@@ -806,7 +805,7 @@ requests.bttfuston.io/gpu    50 100
 
 
 ## 6. Troubleshooting
-### 6.1 context deadline exceeded
+### 6.1 Context deadline exceeded
 If the workload did not run successfully, use the command below to check the log of the workload for details.  
 
 ```shell
@@ -834,7 +833,7 @@ $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```
 
-### 6.2 Porblem of servers.conf file
+### 6.2 Problem of servers.conf file
 If the following error occurs when running POD, modify the Serve.conf file in the tokens directory
 ```
 root@nodel:~/final-test/bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin# kubectl logs -n tensorflow-benchmark bf-pkgs
@@ -857,7 +856,7 @@ $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```
 
-### 6.3 dial tcp IP:port: i/o timeout
+### 6.3 Dial tcp IP:port: i/o timeout
 If the following error occurs when running POD, please check the k8s environment 's network connection
 ```
 [rootbf—pkgs bin]# ./bitfusion list_gpus
