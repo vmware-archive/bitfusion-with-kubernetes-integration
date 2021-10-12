@@ -24,7 +24,7 @@
       - [5.2.2. Using parameter "bitfusion.io/gpu-percent"](#522-using-parameter-bitfusioniogpu-percent)
   - [6. Troubleshooting](#6-troubleshooting)
     - [6.1 context deadline exceeded](#61-context-deadline-exceeded)
-    - [6.2 Porblem of servers.conf file](#62-porblem-of-serversconf-file)
+    - [6.2 Problem of servers.conf file](#62-problem-of-serversconf-file)
     - [6.3 dial tcp IP:port: i/o timeout](#63-dial-tcp-ipport-io-timeout)
   - [7. Note](#7-note)
     - [7.1. The environment variable of LD_LIBRARY_PATH](#71-the-environment-variable-of-ld_library_path)
