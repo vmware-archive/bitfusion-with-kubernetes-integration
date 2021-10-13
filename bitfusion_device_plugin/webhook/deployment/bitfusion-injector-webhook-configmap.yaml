@@ -56,21 +56,22 @@ data:
       emptyDir: {}
     - name: ca
       secret:
-        secretName: bitfusion-secret
+        secretName: bitfusion-client-secret-ca.crt
         items:
           - key: ca.crt
             path: tls/ca.crt
     - name: client-from-secret
       secret:
-        secretName: bitfusion-secret
+        secretName: bitfusion-client-secret-client.yml
         items:
           - key: client.yaml
             path: client.yaml
             mode: 0600
     - name: servers-from-secret
       secret:
-        secretName: bitfusion-secret
+        secretName: bitfusion-client-secret-servers.conf
         items:
           - key: servers.conf
             path: servers.conf
             mode: 0777
+
