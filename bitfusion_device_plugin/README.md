@@ -95,12 +95,20 @@ apiVersion: apps/v1
 ```
 
 ### 2.2. Get Baremetal Token for authorization
-In order to enable Bitfusion, users must generate a **Baremetal Token** for authorization and download the related tar file to the installation machine.  
-Follow these steps to get the token from the vCenter:  
-Step 1. Login to vCenter  
-Step 2. Click on **Bitfusion** in Plugins section  
+In order to enable Bitfusion, users must generate a **Baremetal Token** for authorization and download the related tar file to the installation machine, where you should first login to vCenter, then click on **Bitfusion** item in left sidebar.   
 ![img](diagrams/click-bitfusion-plugin.png)  
-Step 3. Select the **Tokens** tab and then  select the proper token to download   
+
+Here we offer user two ways to get a token from vCenter, optin A is user friendly and efficient procedure but only works for vSphere Bitfusion 4.0.1 +, **we strongly recommand user to follow option A**. For option B, users could download the token file and create secrets in their k8s manually. For users with vSphere Bitfusion 3.5.0, they have to follow option B.
+
+- Option A
+Step 1. Click `KUBERNETES CLUSTERS` label, if there is no clusters pre-added, you should add kubernetes cluster first by clicking `ADD` buttom. When adding a new kubernetes cluster, you should indicate the cluser name, and import the its kubeconfig file, where this file is often placed at `/etc/kubernetes/admin.conf` in your kubenetes cluster, or can run `echo $KUBECONFIG` to reveal its location. Then the vCenter will automatically fetch the IP and namespaces information of your cluster, display them in below. You have to select at least one namespace, it indicates at which namesapce the token should be extracted. We recommand user to choose `kube-system` namespace, since our program will search token secrets in this namespace by default.
+![img](diagrams/add-k8s-set-namespace.png.png)
+
+
+
+![img](diagrams/click-tokens-tag.png)   
+
+Step 3. Select the **Tokens** tab and then select the proper token to download   
 ![img](diagrams/click-tokens-tag.png)   
 Step 4. Click **DOWNLOAD**  button, make sure the token is **Enabled**.  
 ![img](diagrams/click-download-tag.png)   
