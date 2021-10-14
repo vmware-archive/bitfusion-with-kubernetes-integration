@@ -74,32 +74,6 @@ func ConstructBitfusionDistroInfo(configFile string) (*BitfusionClientDistro, er
 	return &result, nil
 }
 
-//func getSecretCaCrt(metadata *metav1.ObjectMeta) string {
-//	annotations := metadata.GetAnnotations()
-//	if annotations != nil {
-//		caCrt := annotations[secretCaCrt]
-//		return caCrt
-//	}
-//	return ""
-//}
-//
-//func getSecretClientYml(metadata *metav1.ObjectMeta) string {
-//	annotations := metadata.GetAnnotations()
-//	if annotations != nil {
-//		clientYml := annotations[secretClientYml]
-//		return clientYml
-//	}
-//	return ""
-//}
-//
-//func getSecretServersConf(metadata *metav1.ObjectMeta) string {
-//	annotations := metadata.GetAnnotations()
-//	if annotations != nil {
-//		serversConf := annotations[secretServersConf]
-//		return serversConf
-//	}
-//	return ""
-//}
 
 func getGuestOS(metadata *metav1.ObjectMeta) string {
 	annotations := metadata.GetAnnotations()
