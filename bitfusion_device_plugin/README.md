@@ -100,17 +100,16 @@ In order to enable Bitfusion, users must generate a **Baremetal Token** for auth
 
 Here we offer user two ways to get a token from vCenter, optin A is user friendly and efficient procedure but only works for vSphere Bitfusion 4.0.1 +, **we strongly recommand user to follow option A**. For option B, users could download the token file and create secrets in their k8s manually. For users with vSphere Bitfusion 3.5.0, they have to follow option B.
 
-- Option A
-Step 1. Click `KUBERNETES CLUSTERS` label, if there is no clusters pre-added, you should add kubernetes cluster first by clicking `ADD` buttom. When adding a new kubernetes cluster, you should indicate the cluser name, and import the its kubeconfig file, where this file is often placed at `/etc/kubernetes/admin.conf` in your kubenetes cluster, or can run `echo $KUBECONFIG` to reveal its location. Then the vCenter will automatically fetch the IP and namespaces information of your cluster, display them in below. You have to select at least one namespace, it indicates at which namesapce the token should be extracted. We recommand user to choose `kube-system` namespace, since our program will search token secrets in this namespace by default.
-![img](diagrams/add-k8s-set-namespace.png.png)
-
-
-
+**Option A (Recommanded)**
+- Step 1. Click `KUBERNETES CLUSTERS` label, if there is no cluster found, you should add kubernetes cluster first by clicking `ADD` button. When adding a new kubernetes cluster, you should indicate the cluser name, and import the its kubeconfig file, where this file is often placed at `/etc/kubernetes/admin.conf` in your kubenetes cluster, or can run `echo $KUBECONFIG` to reveal its location. Then the vCenter will automatically fetch the IP and namespaces information of your cluster, display them in below. You have to select at least one namespace, it indicates at which namesapce the token should be extracted. We recommand user to choose `kube-system` namespace, since our program will search token secrets in this namespace by default.
+  ![img](diagrams/add-k8s-set-namespace.png)
+- Step 2. Click `TOKENS` label, if there is no token found, you should create a token first by clicking `CREATE` button, where you can choose the clusters you added in previous step. After creating, the token has already been imported as secret in your k8s at target namespace. You can also remove or modify the target k8s and namespaces by click `EDIT` button.
+  ![img](diagrams/create-a-token.png)
+  
+**Option B**
+ - Step 1. Click the **Tokens** tab and then select the proper token to download   
 ![img](diagrams/click-tokens-tag.png)   
-
-Step 3. Select the **Tokens** tab and then select the proper token to download   
-![img](diagrams/click-tokens-tag.png)   
-Step 4. Click **DOWNLOAD**  button, make sure the token is **Enabled**.  
+Step 4. Click **DOWNLOAD**  button, make sure the token is **Activated** or **Enabled**.  
 ![img](diagrams/click-download-tag.png)   
 If no tokens are available in the list, click on **NEW TOKEN** to create a Token.  
 For more details, please refer to:   
