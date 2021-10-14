@@ -111,18 +111,16 @@ Here we offer user two ways to get a token from vCenter, optin A is user friendl
 ![img](diagrams/click-tokens-tag.png)   
 Step 4. Click **DOWNLOAD**  button, make sure the token is **Activated** or **Enabled**.  
 ![img](diagrams/click-download-tag.png)   
-If no tokens are available in the list, click on **NEW TOKEN** to create a Token.  
+If no tokens are available in the list, click on **CREATE** or **NEW TOKEN** to create a new token.
 For more details, please refer to:   
-<https://docs.vmware.com/en/VMware-vSphere-Bitfusion/2.5/Install-Guide/GUID-361A9C59-BB22-4BF0-9B05-8E80DE70BE5B.html>
+<https://docs.vmware.com/en/VMware-vSphere-Bitfusion/4.0/Install-Guide/GUID-3E0A4340-8EC0-4DE0-B467-8714725DF901.html>
 
 
-### 2.3. Create a Kubernetes Secret  using the Baremetal Token
-
-Upload the Baremetal Tokens files to the installation machine. Use the following command to unzip the files(**<span style="color:red">NOTE:</span>** the filename of the tar file may be different from the `2BgkZdN.tar`, please change to your own filename):
+ - Step 2. Upload the Baremetal Tokens files to the installation machine. Use the following command to unzip the files(**NOTE:** the filename of the tar file may be different from the `2BgkZdN.tar`, please change to your own filename):
 
 ```shell
 $ mkdir tokens    
-$ tar -xvf ./2BgkZdN.tar -C tokens
+$ tar -xvf ./CA7WPsj.tar -C tokens
 ```
 Now we have three files in the tokens/  directory: ca.crt, client.yaml and services.conf :
 
@@ -134,7 +132,7 @@ tokens
 
 ```
 
-If we want to use Bitfusion client version 3.5, please update the `servers.conf` file as follows(**<span style="color:red">NOTE:</span>** the IP address in `servers.conf` may be different from yours, which means to indicate the IP address of the bitfusion server, please change to your own bitfusion server IP address):
+If usrs who use Bitfusion client version 3.5, please update the `servers.conf` file as follows(**NOTE:** the IP address in `servers.conf` may be different from yours, which means to indicate the IP address of the bitfusion server, please change to your own bitfusion server IP address):
 
 ```
 # Source file content
@@ -155,7 +153,9 @@ servers:
 Then use the following command to create a secret in Kubernetes in the namespace of kube-system:  
 
 ```shell
-$ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
+$ kubectl create secret generic bitfusion-client-secret-ca.crt --from-file=tokens/ca.crt -n kube-system
+$ kubectl create secret generic bitfusion-client-secret-client.yml --from-file=tokens/client.yaml -n kube-system
+$ kubectl create secret generic bitfusion-client-secret-servers.conf --from-file=tokens/servers.conf -n kube-system
 ```
 For more details about kubectl:  <https://kubernetes.io/docs/reference/kubectl/overview/>
 
