@@ -5,8 +5,7 @@
   - [1. Architecture](#1-architecture)
   - [2. Prerequisites](#2-prerequisites)
     - [2.1. Quota configuration](#21-quota-configuration)
-    - [2.2. Get Baremetal Token for authorization](#22-get-baremetal-token-for-authorization)
-    - [2.3. Create a Kubernetes Secret  using the Baremetal Token](#23-create-a-kubernetes-secret--using-the-baremetal-token)
+    - [2.2. Get Baremetal Token for authorization and create kubernetes secrets](#22-get-baremetal-token-for-authorization-and-create-kubernetes-secrets)
   - [3. Quick Start](#3-quick-start)
     - [3.1. Option 1: Using pre-built images (recommended)](#31-option-1-using-pre-built-images-recommended)
     - [3.2. Option 2: Building images from scratch](#32-option-2-building-images-from-scratch)
@@ -94,35 +93,31 @@ apiVersion: apps/v1
 
 ```
 
-### 2.2. Get Baremetal Token for authorization
-In order to enable Bitfusion, users must generate a **Baremetal Token** for authorization and download the related tar file to the installation machine, where you should first login to vCenter, then click on **Bitfusion** item in left sidebar.   
+### 2.2. Get Baremetal Token for authorization and create kubernetes secrets
+In order to enable Bitfusion, users must generate a **Baremetal Token** for authorization, where you should first login to vCenter, then click on **Bitfusion** item in left sidebar.   
 ![img](diagrams/click-bitfusion-plugin.png)  
 
-Here we offer user two ways to get a token from vCenter, optin A is user friendly and efficient procedure but only works for vSphere Bitfusion 4.0.1 +, **we strongly recommand user to follow option A**. For option B, users could download the token file and create secrets in their k8s manually. For users with vSphere Bitfusion 3.5.0, they have to follow option B.
+Here we offer user two ways to get a token and create kubernetes secrets, optin A is user friendly and efficient procedure but only works for vSphere Bitfusion 4.0.1 +, **we strongly recommand user to follow option A**. For option B, users could download the token file and create secrets in their k8s manually. For users with vSphere Bitfusion 3.5.0, they have to follow option B.
 
 **Option A (Recommanded)**
-- Step 1. Click `KUBERNETES CLUSTERS` label, if there is no cluster found, you should add kubernetes cluster first by clicking `ADD` button. When adding a new kubernetes cluster, you should indicate the cluser name, and import the its kubeconfig file, where this file is often placed at `/etc/kubernetes/admin.conf` in your kubenetes cluster, or can run `echo $KUBECONFIG` to reveal its location. Then the vCenter will automatically fetch the IP and namespaces information of your cluster, display them in below. You have to select at least one namespace, it indicates at which namesapce the token should be extracted. We recommand user to choose `kube-system` namespace, since our program will search token secrets in this namespace by default.
+- Step 1. Click `KUBERNETES CLUSTERS` label, if there is no cluster found, you should add kubernetes cluster first by clicking `ADD` button. When adding a new kubernetes cluster, you should indicate the cluser name, and import the its kubeconfig file, which is often placed at `/etc/kubernetes/admin.conf` in your kubenetes cluster, or you can run `echo $KUBECONFIG` to reveal its location. Then the vCenter will automatically fetch the IP and namespaces information of your cluster, displaying them in below. You have to select at least one namespace, it indicates at which namesapce the token should be extracted. We recommand user to choose `kube-system` namespace, since our program will search token secrets in this namespace by default.
   ![img](diagrams/add-k8s-set-namespace.png)
 - Step 2. Click `TOKENS` label, if there is no token found, you should create a token first by clicking `CREATE` button, where you can choose the clusters you added in previous step. After creating, the token has already been imported as secret in your k8s at target namespace. You can also remove or modify the target k8s and namespaces by click `EDIT` button.
   ![img](diagrams/create-a-token.png)
   
 **Option B**
  - Step 1. Click the **Tokens** tab and then select the proper token to download   
-![img](diagrams/click-tokens-tag.png)   
-Step 4. Click **DOWNLOAD**  button, make sure the token is **Activated** or **Enabled**.  
 ![img](diagrams/click-download-tag.png)   
-If no tokens are available in the list, click on **CREATE** or **NEW TOKEN** to create a new token.
-For more details, please refer to:   
+ - Step 2. Click **DOWNLOAD**  button, make sure the token is **Activated** or **Enabled**. If no tokens are available in the list, click on **CREATE** or **NEW TOKEN** to create a new token. For more details, please refer to:   
 <https://docs.vmware.com/en/VMware-vSphere-Bitfusion/4.0/Install-Guide/GUID-3E0A4340-8EC0-4DE0-B467-8714725DF901.html>
 
-
- - Step 2. Upload the Baremetal Tokens files to the installation machine. Use the following command to unzip the files(**NOTE:** the filename of the tar file may be different from the `2BgkZdN.tar`, please change to your own filename):
+ - Step 3. Upload the Baremetal Tokens files to the installation machine. Use the following command to unzip the files(**NOTE:** the filename of the tar file may be different from the `CA7WPsj.tar`, please change to your own filename):
 
 ```shell
 $ mkdir tokens    
 $ tar -xvf ./CA7WPsj.tar -C tokens
 ```
-Now we have three files in the tokens/  directory: ca.crt, client.yaml and services.conf :
+&nbsp;&nbsp;&nbsp;&nbsp;Now we have three files in the tokens/  directory: ca.crt, client.yaml and services.conf :
 
 ```   
 tokens  
@@ -131,8 +126,7 @@ tokens
 └── servers.conf  
 
 ```
-
-If usrs who use Bitfusion client version 3.5, please update the `servers.conf` file as follows(**NOTE:** the IP address in `servers.conf` may be different from yours, which means to indicate the IP address of the bitfusion server, please change to your own bitfusion server IP address):
+&nbsp;&nbsp;&nbsp;&nbsp;If usrs who use Bitfusion client version 3.5, please update the `servers.conf` file as follows(**NOTE:** the IP address in `servers.conf` may be different from yours, which means to indicate the IP address of the bitfusion server, please change to your own bitfusion server IP address):
 
 ```
 # Source file content
@@ -140,7 +134,7 @@ servers:
 - addresses:
   - 10.202.122.248:56001
 ```
-Change the file above to
+&nbsp;&nbsp;&nbsp;&nbsp;Change the file above to
 
 ```
 # Modified file contents
@@ -149,8 +143,8 @@ servers:
   addresses:
   - 10.202.122.248:56001
 ```
-
-Then use the following command to create a secret in Kubernetes in the namespace of kube-system:  
+ - Step 4.
+ Use the following command to create a secret in Kubernetes in the namespace of kube-system:  
 
 ```shell
 $ kubectl create secret generic bitfusion-client-secret-ca.crt --from-file=tokens/ca.crt -n kube-system
