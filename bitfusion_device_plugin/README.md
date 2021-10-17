@@ -1,5 +1,36 @@
-# Bitfusion on Kubernetes ##
+# Bitfusion on Kubernetes #
 
+
+- [Bitfusion on Kubernetes](#bitfusion-on-kubernetes)
+  - [1. Architecture](#1-architecture)
+  - [2. Prerequisites](#2-prerequisites)
+    - [2.1. Quota configuration](#21-quota-configuration)
+    - [2.2. Get Baremetal Token for authorization and create kubernetes secrets](#22-get-baremetal-token-for-authorization-and-create-kubernetes-secrets)
+  - [3. Quick Start](#3-quick-start)
+    - [3.1. Option 1: Using pre-built images (recommended)](#31-option-1-using-pre-built-images-recommended)
+    - [3.2. Option 2: Building images from scratch](#32-option-2-building-images-from-scratch)
+    - [3.3. Verifying the deployment](#33-verifying-the-deployment)
+    - [3.4. Uninstall](#34-uninstall)
+  - [4. Using Bitfusion GPU in Kubernetes workload](#4-using-bitfusion-gpu-in-kubernetes-workload)
+    - [4.1. Option 1: Submit the workload with "gpu-percent" parameter](#41-option-1-submit-the-workload-with-gpu-percent-parameter)
+    - [4.2. Option 2: Submit the workload with "gpu-memory" parameter](#42-option-2-submit-the-workload-with-gpu-memory-parameter)
+    - [4.3. The configuration of "auto-management/bitfusion parameter"](#43-the-configuration-of-auto-managementbitfusion-parameter)
+    - [4.4. The configuration of "bitfusion-client/filter parameter"](#44-the-configuration-of-bitfusion-clientfilter-parameter)
+  - [5.  Resource Quota (optional)](#5--resource-quota-optional)
+    - [5.1. Enforce Quota](#51-enforce-quota)
+    - [5.2. Validate the quota using the following two methods](#52-validate-the-quota-using-the-following-two-methods)
+      - [5.2.1. Using parameter "bitfusion.io/gpu-memory"](#521-using-parameter-bitfusioniogpu-memory)
+      - [5.2.2. Using parameter "bitfusion.io/gpu-percent"](#522-using-parameter-bitfusioniogpu-percent)
+  - [6. Troubleshooting](#6-troubleshooting)
+    - [6.1 context deadline exceeded](#61-context-deadline-exceeded)
+    - [6.2 Problem of servers.conf file](#62-problem-of-serversconf-file)
+    - [6.3 dial tcp IP:port: i/o timeout](#63-dial-tcp-ipport-io-timeout)
+  - [7. Note](#7-note)
+    - [7.1. The environment variable of LD_LIBRARY_PATH](#71-the-environment-variable-of-ld_library_path)
+    - [7.2. Deploy the Bitfusion Device Plugin on Tanzu](#72-deploy-the-bitfusion-device-plugin-on-tanzu)
+    - [7.3 Alternative docker image registry](#73-alternative-docker-image-registry)
+
+* * *
 
 Current solutions of GPU virtualization may have some shortcomings:
 
@@ -62,30 +93,31 @@ apiVersion: apps/v1
 
 ```
 
-### 2.2. Get Baremetal Token for authorization
-In order to enable Bitfusion, users must generate a **Baremetal Token** for authorization and download the related tar file to the installation machine.  
-Follow these steps to get the token from the vCenter:  
-Step 1. Login to vCenter  
-Step 2. Click on **Bitfusion** in Plugins section  
+### 2.2. Get Baremetal Token for authorization and create kubernetes secrets
+In order to enable Bitfusion, users must generate a **Baremetal Token** for authorization, where you should first login to vCenter, then click on **Bitfusion** item in left sidebar.   
 ![img](diagrams/click-bitfusion-plugin.png)  
-Step 3. Select the **Tokens** tab and then  select the proper token to download   
-![img](diagrams/click-tokens-tag.png)   
-Step 4. Click **DOWNLOAD**  button, make sure the token is **Enabled**.  
+
+Here we offer user two ways to get a token and create kubernetes secrets, optin A is user friendly and efficient procedure but only works for vSphere Bitfusion 4.0.1 +, **we strongly recommand user to follow option A**. For option B, users could download the token file and create secrets in their k8s manually. For users with vSphere Bitfusion 3.5.0, they have to follow option B.
+
+**Option A (Recommanded)**
+- Step 1. Click `KUBERNETES CLUSTERS` label, if there is no cluster found, you should add kubernetes cluster first by clicking `ADD` button. When adding a new kubernetes cluster, you should indicate the cluser name, and import the its kubeconfig file, which is often placed at `/etc/kubernetes/admin.conf` in your kubenetes cluster, or you can run `echo $KUBECONFIG` to reveal its location. Then the vCenter will automatically fetch the IP and namespaces information of your cluster, displaying them in below. You have to select at least one namespace, it indicates at which namesapce the token should be extracted. We recommand user to choose `kube-system` namespace, since our program will search token secrets in this namespace by default.
+  ![img](diagrams/add-k8s-set-namespace.png)
+- Step 2. Click `TOKENS` label, if there is no token found, you should create a token first by clicking `CREATE` button, where you can choose the clusters you added in previous step. After creating, the token has already been imported as secret in your k8s at target namespace. You can also remove or modify the target k8s and namespaces by click `EDIT` button.
+  ![img](diagrams/create-a-token.png)
+  
+**Option B**
+ - Step 1. Click the **Tokens** tab and then select the proper token to download   
 ![img](diagrams/click-download-tag.png)   
-If no tokens are available in the list, click on **NEW TOKEN** to create a Token.  
-For more details, please refer to:   
-<https://docs.vmware.com/en/VMware-vSphere-Bitfusion/2.5/Install-Guide/GUID-361A9C59-BB22-4BF0-9B05-8E80DE70BE5B.html>
+ - Step 2. Click **DOWNLOAD**  button, make sure the token is **Activated** or **Enabled**. If no tokens are available in the list, click on **CREATE** or **NEW TOKEN** to create a new token. For more details, please refer to:   
+<https://docs.vmware.com/en/VMware-vSphere-Bitfusion/4.0/Install-Guide/GUID-3E0A4340-8EC0-4DE0-B467-8714725DF901.html>
 
-
-### 2.3. Create a Kubernetes Secret  using the Baremetal Token
-
-Upload the Baremetal Tokens files to the installation machine. Use the following command to unzip the files:
+ - Step 3. Upload the Baremetal Tokens files to the installation machine. Use the following command to unzip the files(**NOTE:** the filename of the tar file may be different from the `CA7WPsj.tar`, please change to your own filename):
 
 ```shell
 $ mkdir tokens    
-$ tar -xvf ./2BgkZdN.tar -C tokens
+$ tar -xvf ./CA7WPsj.tar -C tokens
 ```
-Now we have three files in the tokens/  directory: ca.crt, client.yaml and services.conf :
+&nbsp;&nbsp;&nbsp;&nbsp;Now we have three files in the tokens/  directory: ca.crt, client.yaml and services.conf :
 
 ```   
 tokens  
@@ -94,8 +126,7 @@ tokens
 └── servers.conf  
 
 ```
-
-If we want to use Bitfusion client version 3.5, please update the servers.conf file as follows:
+&nbsp;&nbsp;&nbsp;&nbsp;If usrs who use Bitfusion client version 3.5, please update the `servers.conf` file as follows(**NOTE:** the IP address in `servers.conf` may be different from yours, which means to indicate the IP address of the bitfusion server, please change to your own bitfusion server IP address):
 
 ```
 # Source file content
@@ -103,7 +134,7 @@ servers:
 - addresses:
   - 10.202.122.248:56001
 ```
-Change the file above to
+&nbsp;&nbsp;&nbsp;&nbsp;Change the file above to
 
 ```
 # Modified file contents
@@ -112,11 +143,13 @@ servers:
   addresses:
   - 10.202.122.248:56001
 ```
-
-Then use the following command to create a secret in Kubernetes in the namespace of kube-system:  
+ - Step 4.
+ Use the following command to create a secret in Kubernetes in the namespace of kube-system:  
 
 ```shell
-$ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
+$ kubectl create secret generic bitfusion-client-secret-ca.crt --from-file=tokens/ca.crt -n kube-system
+$ kubectl create secret generic bitfusion-client-secret-client.yml --from-file=tokens/client.yaml -n kube-system
+$ kubectl create secret generic bitfusion-client-secret-servers.conf --from-file=tokens/servers.conf -n kube-system
 ```
 For more details about kubectl:  <https://kubernetes.io/docs/reference/kubectl/overview/>
 
@@ -260,7 +293,7 @@ bwki-webhook-svc              ClusterIP   10.101.39.4   <none>        443/TCP   
 
 ### 3.4. Uninstall
 
-Uninstall the program and clean up all cache files using the following command:
+If you decide to uninstall the program and clean up all cache files, you should use the following command:
 ```bash
 $ make uninstall
 ```
@@ -707,8 +740,15 @@ Use the following command to check the quota consumption:
 ```
 $ kubectl describe quota -n tensorflow-benchmark bitfusion-quota 
 ```
-
-![img](diagrams/quota.png) 
+the outputs should be:
+```
+root@vmware:/home/vmware# kubectl describe quota -n tensorflow-benchmark bitfusion-quota
+Name: bitfuston-quota
+Namespace: tensorflow-benchmark
+Resource                    Used Hard
+--------                    ---- ----
+requests.bttfuston.io/gpu    50 100
+```
 
 #### 5.2.2. Using parameter "bitfusion.io/gpu-percent"
 
@@ -753,14 +793,21 @@ Use the following command to check the quota consumption:
 ```
 $ kubectl describe quota -n tensorflow-benchmark bitfusion-quota 
 ```
-
-![img](diagrams/quota.png) 
+the outputs should be:
+```
+root@vmware:/home/vmware# kubectl describe quota -n tensorflow-benchmark bitfusion-quota
+Name: bitfuston-quota
+Namespace: tensorflow-benchmark
+Resource                    Used Hard
+--------                    ---- ----
+requests.bttfuston.io/gpu    50 100
+```
 
 
 
 ## 6. Troubleshooting
-
-- If the workload did not run successfully, use the command below to check the log of the workload for details.  
+### 6.1 Context deadline exceeded
+If the workload did not run successfully, use the command below to check the log of the workload for details.  
 
 ```shell
 $ kubectl logs -n tensorflow-benchmark   bf-pkgs
@@ -769,7 +816,12 @@ $ kubectl logs -n tensorflow-benchmark   bf-pkgs
 "bf-pkgs" is the pod name.
 
 The logs below indicate some errors of contacting Bitfusion server.
-![img](diagrams/trouble-one.png)   
+```
+root@nodel:~/final-test/bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin# kubectl logs -n tensorflow-benchmark bf-deployment-54c675cbff-sb4bq 
+[INFO] 2021-03-29T01:05:36Z Query server 10.117.32.156:56001 to claim host id: 012b965d-93b8-465f-97eb-eaba51bc3599
+[WARN] 2021-03-29T01:05:37Z Error contacting server 10.117.32.156:56001 to verify client id: Get https://10.117.32.156:56001/claim_id: context deadline exceeded Error: none of the servers responded correctly to client id claim requests.
+root@nodel:~/final-test/bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin# 
+```
 
 
 Check the validity of the **Baremetal token** from vCenter Bitfusion Plugin. 
@@ -782,10 +834,21 @@ $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```
 
+### 6.2 Problem of servers.conf file
 If the following error occurs when running POD, modify the Serve.conf file in the tokens directory
-![img](diagrams/trouble-servers-conf-error.png) 
+```
+root@nodel:~/final-test/bitfusion-with-kubernetes-integration-main/bitfusion_device_plugin# kubectl logs -n tensorflow-benchmark bf-pkgs
+[INFO] 2021-03-29T01:05:36Z Query server health status
+[WARN] 2021-03-29T01:05:37Z Failed to parse /root/.bitfusion/servers.conf: open /root/.bitfusion/servers.conf: read-only file system
+Error: none of the servers responded correctly to client id claim requests.
+```
 Change the servers.conf file to the following format.The ACTUAL IP address prevails
-![img](diagrams/trouble-servers-conf-soultion.png) 
+```
+servers:
+- reachable:10.202.122.248:56001
+  addresses:
+  - 10.202.122.248:56001
+```
 
 Then re-run the following command to create secret 
 ```
@@ -794,8 +857,14 @@ $ kubectl delete secret -n tensorflow-benchmark  bitfusion-secret
 $ kubectl create secret generic bitfusion-secret --from-file=tokens -n kube-system
 ```
 
+### 6.3 Dial tcp IP:port: i/o timeout
 If the following error occurs when running POD, please check the k8s environment 's network connection
-![img](diagrams/trouble-connect-error.png)
+```
+[rootbf—pkgs bin]# ./bitfusion list_gpus
+[INFO] 2021—09—22T11:24:04Z Query server 10.117.32.156:56001 to claim host id: 1a722830—1d27—4ee9—ac0b-f77c19fb189c
+[WARN] 2021—09—22T11:2405Z Error contacting server 10.117.32.156:56001 to verify client id: Get https://10.117.32.156:56001/claim id: dial tcp 10.117.32.156:56001: i/o timeout
+Error: none of the servers responded correctly to client id claim requests.
+```
 
 ## 7. Note
 

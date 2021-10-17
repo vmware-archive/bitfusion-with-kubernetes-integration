@@ -74,6 +74,7 @@ func ConstructBitfusionDistroInfo(configFile string) (*BitfusionClientDistro, er
 	return &result, nil
 }
 
+
 func getGuestOS(metadata *metav1.ObjectMeta) string {
 	annotations := metadata.GetAnnotations()
 	if annotations != nil {
@@ -283,7 +284,9 @@ func updateInitContainersResources(target, added []corev1.Container) []corev1.Co
 
 // copySecret copies a secret to target namespace
 func copySecret(namespace *string) error {
-	name := "bitfusion-secret"
+	secretCaCrt := "bitfusion-client-secret-ca.crt"
+	secretClientYml := "bitfusion-client-secret-client.yml"
+	secretServersConf := "bitfusion-client-secret-servers.conf"
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return err
@@ -293,28 +296,39 @@ func copySecret(namespace *string) error {
 		return err
 	}
 
-	_, err = clientset.CoreV1().Secrets(*namespace).Get(context.TODO(), name, metav1.GetOptions{})
-	if errors.IsNotFound(err) {
-		err = nil
-		glog.Infof("Secrets %s  not found in  namespace  %s \n", name, *namespace)
-		secret, err := clientset.CoreV1().Secrets("kube-system").Get(context.TODO(), name, metav1.GetOptions{})
-		if err != nil {
-			return err
-		}
-		newSecret := &corev1.Secret{
-			Data: secret.Data,
-			Type: secret.Type,
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: *namespace,
-			},
-		}
-		// Create the secret
-		_, err = clientset.CoreV1().Secrets(*namespace).Create(context.TODO(), newSecret, metav1.CreateOptions{})
+	_, secretCaCrtErr := clientset.CoreV1().Secrets(*namespace).Get(context.TODO(), secretCaCrt, metav1.GetOptions{})
+	_, secretClientYmlErr := clientset.CoreV1().Secrets(*namespace).Get(context.TODO(), secretClientYml, metav1.GetOptions{})
+	_, secretServersConfErr := clientset.CoreV1().Secrets(*namespace).Get(context.TODO(), secretServersConf, metav1.GetOptions{})
 
-		if err != nil {
-			glog.Errorf("Can't create secret: %v", err)
+	if errors.IsNotFound(secretCaCrtErr) || errors.IsNotFound(secretClientYmlErr) || errors.IsNotFound(secretServersConfErr)  {
+		err = nil
+		glog.Infof("Secrets %s  not found in  namespace  %s \n", secretCaCrt, *namespace)
+		glog.Infof("Secrets %s  not found in  namespace  %s \n", secretClientYml, *namespace)
+		glog.Infof("Secrets %s  not found in  namespace  %s \n", secretServersConf, *namespace)
+
+		secretFiles := []string{secretCaCrt, secretClientYml, secretServersConf}
+		for _, name := range secretFiles {
+
+			secret, err := clientset.CoreV1().Secrets("kube-system").Get(context.TODO(), name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			newSecret := &corev1.Secret{
+				Data: secret.Data,
+				Type: secret.Type,
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: *namespace,
+				},
+			}
+			// Create the secret
+			_, err = clientset.CoreV1().Secrets(*namespace).Create(context.TODO(), newSecret, metav1.CreateOptions{})
+			if err != nil {
+				glog.Errorf("Can't create secret: %v", err)
+			}
+
 		}
+
 	}
 	return err
 }
@@ -524,3 +538,4 @@ func LoadConfig(configFile string) (*Config, error) {
 
 	return &cfg, nil
 }
+
