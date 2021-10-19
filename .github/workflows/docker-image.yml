@@ -15,4 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build the bitfusion-device-plugin
-      run: docker build -t docker.io/bitfusiondeviceplugin/bitfusion-device-plugin:0.3 -f bitfusion_device_plugin/device-plugin/build/Dockerfile .
+      run: |
+          ls
+          pwd
+#       run: docker build -t docker.io/bitfusiondeviceplugin/bitfusion-device-plugin:0.3 -f bitfusion_device_plugin/device-plugin/build/Dockerfile .
