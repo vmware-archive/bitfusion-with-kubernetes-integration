@@ -8,7 +8,7 @@ FROM ubuntu:18.04 as builder
 RUN apt update && apt install curl -y
 RUN \
   mkdir -p /goroot && \
-  curl https://storage.googleapis.com/golang/go1.14.linux-amd64.tar.gz | tar xvzf - -C /goroot --strip-components=1
+  curl https://storage.googleapis.com/golang/go1.14.linux-amd64.tar.gz | tar xvzf - -C /goroot --strip-components=1 > /dev/null
 # Set environment variables.
 ENV GOROOT /goroot
 ENV GOPATH /gopath
