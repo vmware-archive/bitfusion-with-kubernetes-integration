@@ -28,7 +28,7 @@
   - [7. Note](#7-note)
     - [7.1. The environment variable of LD_LIBRARY_PATH](#71-the-environment-variable-of-ld_library_path)
     - [7.2. Deploy the Bitfusion Device Plugin on Tanzu](#72-deploy-the-bitfusion-device-plugin-on-tanzu)
-    - [7.3 Alternative docker image registry](#73-alternative-docker-image-registry)
+    - [7.3. Alternative docker image registry](#73-alternative-docker-image-registry)
 
 * * *
 
@@ -912,7 +912,7 @@ K8S_PLATFORM ?= tkgi
 
 After that run the "make deploy" command to start the deployment.
 
-### 7.3 Alternative docker image registry
+### 7.3. Alternative docker image registry
 
 Below is another image regsitry for users to get the docker images.
 - Option 1: Tencentyun
