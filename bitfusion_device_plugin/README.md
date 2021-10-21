@@ -5,7 +5,7 @@
   - [1. Architecture](#1-architecture)
   - [2. Prerequisites](#2-prerequisites)
     - [2.1. Quota configuration](#21-quota-configuration)
-    - [2.2. Get Baremetal Token for authorization and create kubernetes secrets](#22-get-baremetal-token-for-authorization-and-create-kubernetes-secrets)
+    - [2.2. Get baremetal token for authorization and create kubernetes secrets](#22-get-baremetal-token-for-authorization-and-create-kubernetes-secrets)
   - [3. Quick Start](#3-quick-start)
     - [3.1. Option 1: Using pre-built images (recommended)](#31-option-1-using-pre-built-images-recommended)
     - [3.2. Option 2: Building images from scratch](#32-option-2-building-images-from-scratch)
@@ -93,7 +93,7 @@ apiVersion: apps/v1
 
 ```
 
-### 2.2. Get Baremetal Token for authorization and create kubernetes secrets
+### 2.2. Get baremetal token for authorization and create kubernetes secrets
 In order to enable Bitfusion, users must generate a **Baremetal Token** for authorization, where you should first login to vCenter, then click on **Bitfusion** item in left sidebar.   
 ![img](diagrams/click-bitfusion-plugin.png)  
 
@@ -915,11 +915,20 @@ After that run the "make deploy" command to start the deployment.
 ### 7.3 Alternative docker image registry
 
 Below is another image regsitry for users to get the docker images.
+- Option 1: Tencentyun
 ```shell
 ccr.ccs.tencentyun.com/bitfusion/bitfusion-device-plugin:0.3
 
 ccr.ccs.tencentyun.com/bitfusion/bitfusion-webhook:0.3
 
 ccr.ccs.tencentyun.com/bitfusion/bitfusion-client:0.3
+```
+- Option 2: GHCR
+```
+ghcr.io/ln23415/bitfusion-device-plugin:0.3
+
+ghcr.io/ln23415/bitfusion-webhook:0.3
+
+ghcr.io/ln23415/bitfusion-client:0.3
 ```
 
