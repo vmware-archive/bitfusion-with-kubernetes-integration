@@ -5,7 +5,7 @@
   - [1. Architecture](#1-architecture)
   - [2. Prerequisites](#2-prerequisites)
     - [2.1. Quota configuration](#21-quota-configuration)
-    - [2.2. Get Baremetal Token for authorization and create kubernetes secrets](#22-get-baremetal-token-for-authorization-and-create-kubernetes-secrets)
+    - [2.2. Get baremetal token for authorization and create kubernetes secrets](#22-get-baremetal-token-for-authorization-and-create-kubernetes-secrets)
   - [3. Quick Start](#3-quick-start)
     - [3.1. Option 1: Using pre-built images (recommended)](#31-option-1-using-pre-built-images-recommended)
     - [3.2. Option 2: Building images from scratch](#32-option-2-building-images-from-scratch)
@@ -22,13 +22,13 @@
       - [5.2.1. Using parameter "bitfusion.io/gpu-memory"](#521-using-parameter-bitfusioniogpu-memory)
       - [5.2.2. Using parameter "bitfusion.io/gpu-percent"](#522-using-parameter-bitfusioniogpu-percent)
   - [6. Troubleshooting](#6-troubleshooting)
-    - [6.1 context deadline exceeded](#61-context-deadline-exceeded)
+    - [6.1 Context deadline exceeded](#61-context-deadline-exceeded)
     - [6.2 Problem of servers.conf file](#62-problem-of-serversconf-file)
-    - [6.3 dial tcp IP:port: i/o timeout](#63-dial-tcp-ipport-io-timeout)
+    - [6.3 Dial tcp IP:port: i/o timeout](#63-dial-tcp-ipport-io-timeout)
   - [7. Note](#7-note)
     - [7.1. The environment variable of LD_LIBRARY_PATH](#71-the-environment-variable-of-ld_library_path)
     - [7.2. Deploy the Bitfusion Device Plugin on Tanzu](#72-deploy-the-bitfusion-device-plugin-on-tanzu)
-    - [7.3 Alternative docker image registry](#73-alternative-docker-image-registry)
+    - [7.3. Alternative docker image registry](#73-alternative-docker-image-registry)
 
 * * *
 
@@ -93,7 +93,7 @@ apiVersion: apps/v1
 
 ```
 
-### 2.2. Get Baremetal Token for authorization and create kubernetes secrets
+### 2.2. Get baremetal token for authorization and create kubernetes secrets
 In order to enable Bitfusion, users must generate a **Baremetal Token** for authorization, where you should first login to vCenter, then click on **Bitfusion** item in left sidebar.   
 ![img](diagrams/click-bitfusion-plugin.png)  
 
@@ -912,14 +912,23 @@ K8S_PLATFORM ?= tkgi
 
 After that run the "make deploy" command to start the deployment.
 
-### 7.3 Alternative docker image registry
+### 7.3. Alternative docker image registry
 
 Below is another image regsitry for users to get the docker images.
+- Option 1: Tencentyun
 ```shell
 ccr.ccs.tencentyun.com/bitfusion/bitfusion-device-plugin:0.3
 
 ccr.ccs.tencentyun.com/bitfusion/bitfusion-webhook:0.3
 
 ccr.ccs.tencentyun.com/bitfusion/bitfusion-client:0.3
+```
+- Option 2: GHCR
+```
+ghcr.io/ln23415/bitfusion-device-plugin:0.3
+
+ghcr.io/ln23415/bitfusion-webhook:0.3
+
+ghcr.io/ln23415/bitfusion-client:0.3
 ```
 
