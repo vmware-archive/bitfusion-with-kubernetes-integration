@@ -64,8 +64,8 @@ bitfusion-webhook runs as a Deployment on the Kubernetes master node.
 ## 2. Prerequisites 
 -  Ubuntu Linux as the operating system of the installation machine 
 -  OpenSSL needs to be installed on Ubuntu
--  Kubernetes 1.17+
--  Bitfusion 3.5 and 4.0.1 
+-  Kubernetes 1.16+
+-  Bitfusion 4.0.1 and 4.5.0 
 -  kubectl and docker command are ready to use.  
 -  need to specify the command field in the POD
 
@@ -201,7 +201,7 @@ IMAGE_REPO ?= docker.io/bitfusiondeviceplugin
 DEVICE_IMAGE_NAME ?= bitfusion-device-plugin
 WEBHOOK_IMAGE_NAME ?= bitfusion-webhook
 PKG_IMAGE_NAME ?= bitfusion-client
-IMAGE_TAG  ?= 0.3
+IMAGE_TAG  ?= 0.4
 ```
 
 Now start building images using the command below:
@@ -214,9 +214,9 @@ If everything works well, use the following command to check images:
 ```shell
 $ docker images
 REPOSITORY                                                                         TAG
-docker.io/bitfusiondeviceplugin/bitfusion-device-plugin                            0.3                 
-docker.io/bitfusiondeviceplugin/bitfusion-webhook                                  0.3                 
-docker.io/bitfusiondeviceplugin/bitfusion-client                                   0.3         
+docker.io/bitfusiondeviceplugin/bitfusion-device-plugin                            0.4                 
+docker.io/bitfusiondeviceplugin/bitfusion-webhook                                  0.4                 
+docker.io/bitfusiondeviceplugin/bitfusion-client                                   0.4         
 
 ```
 
@@ -310,7 +310,7 @@ After completing the installation, users can write a YAML file of Kubernetes to 
 | bitfusion.io/gpu-percent  | positive integer                        |Percentage of the memory of each GPU|
 | bitfusion.io/gpu-memory   | positive integer                        |Memory size of each GPU,The default unit is bit.It can be used with the K8s native memory application unit (Mi,M,G,Gi)|
 | bitfusion-client/os       | ubuntu18 / ubuntu20 / centos7 / centos8 |The OS of the containers that use the Bitfusion client|
-| bitfusion-client/version  | 350/401                             |The version of Bitfusion client to be used in this container is 3.5 or 4.0.1|
+| bitfusion-client/version  | 401/450                             |The version of Bitfusion client to be used in this container is 3.5 or 4.0.1|
 
 
 Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable `hostPath` is the directory where the Tensorflow Benchmarks code resides on the host and it will be mounted into the pod.
@@ -328,7 +328,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "401"
+    bitfusion-client/version: "450"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
@@ -376,7 +376,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "401"
+    bitfusion-client/version: "450"
   name: bf-pkgs
   # You can specify any namespace
   namespace: tensorflow-benchmark
@@ -500,7 +500,7 @@ total images/sec: 199.65
 
 ### 4.3. The configuration of "auto-management/bitfusion parameter"
 
-If the value of auto-management/bitfusion parameter is set to "all", use the following command to to check the status of the pod when the workload has been summited. 
+If the value of auto-management/bitfusion parameter is set to "all", use the following command to to check the status of the pod when the workload has been submitted. 
 
 ```bash
 $ kubectl edit pod -n tensorflow-benchmark bf-pkgs
@@ -610,7 +610,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "401"
+    bitfusion-client/version: "450"
     # Use a single filter condition
     bitfusion-client/filter: "server.hostname=bf-server"
   name: bf-pkgs
@@ -643,7 +643,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "401"
+    bitfusion-client/version: "450"
     # Use multiple filter criteria
     bitfusion-client/filter: "server.hostname=bf-server server.addr=192.168.1.1 server.hostname=bf-server2"
   name: bf-pkgs
@@ -708,7 +708,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "401"
+    bitfusion-client/version: "450"
   name: bf-pkgs
   namespace: tensorflow-benchmark
 spec:
@@ -762,7 +762,7 @@ metadata:
   annotations:
     auto-management/bitfusion: "all"
     bitfusion-client/os: "ubuntu18"
-    bitfusion-client/version: "401"
+    bitfusion-client/version: "450"
   name: bf-pkgs
   namespace: tensorflow-benchmark
 spec:
@@ -917,18 +917,18 @@ After that run the "make deploy" command to start the deployment.
 Below is another image regsitry for users to get the docker images.
 - Option 1: Tencentyun
 ```shell
-ccr.ccs.tencentyun.com/bitfusion/bitfusion-device-plugin:0.3
+ccr.ccs.tencentyun.com/bitfusion/bitfusion-device-plugin:0.4
 
-ccr.ccs.tencentyun.com/bitfusion/bitfusion-webhook:0.3
+ccr.ccs.tencentyun.com/bitfusion/bitfusion-webhook:0.4
 
-ccr.ccs.tencentyun.com/bitfusion/bitfusion-client:0.3
+ccr.ccs.tencentyun.com/bitfusion/bitfusion-client:0.4
 ```
 - Option 2: GHCR
 ```
-ghcr.io/ln23415/bitfusion-device-plugin:0.3
+ghcr.io/ln23415/bitfusion-device-plugin:0.4
 
-ghcr.io/ln23415/bitfusion-webhook:0.3
+ghcr.io/ln23415/bitfusion-webhook:0.4
 
-ghcr.io/ln23415/bitfusion-client:0.3
+ghcr.io/ln23415/bitfusion-client:0.4
 ```
 
