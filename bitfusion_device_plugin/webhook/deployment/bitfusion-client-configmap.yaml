@@ -7,6 +7,26 @@ data:
   bitfusion-client-config.yaml: |
     BitfusionClients:
 
+      - BitfusionVersion: "450"
+        OSVersion: ubuntu18
+        BinaryPath: /bitfusion/bitfusion-client-ubuntu1804_4.5.0-4_amd64.deb/usr/bin/bitfusion
+        EnvVariable: /bitfusion/bitfusion-client-ubuntu1804_4.5.0-4_amd64.deb/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/
+
+      - BitfusionVersion: "450"
+        OSVersion: ubuntu20
+        BinaryPath: /bitfusion/bitfusion-client-ubuntu2004_4.5.0-4_amd64.deb/usr/bin/bitfusion
+        EnvVariable: /bitfusion/bitfusion-client-ubuntu2004_4.5.0-4_amd64.deb/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/
+
+      - BitfusionVersion: "450"
+        OSVersion: centos7
+        BinaryPath: /bitfusion/bitfusion-client-centos7-4.5.0-4.x86_64.rpm/usr/bin/bitfusion
+        EnvVariable: /bitfusion/bitfusion-client-centos7-4.5.0-4.x86_64.rpm/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/
+
+      - BitfusionVersion: "450"
+        OSVersion: centos8
+        BinaryPath: /bitfusion/bitfusion-client-centos8-4.5.0-4.x86_64.rpm/usr/bin/bitfusion
+        EnvVariable: /bitfusion/bitfusion-client-centos8-4.5.0-4.x86_64.rpm/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/
+
       - BitfusionVersion: "401"
         OSVersion: ubuntu18
         BinaryPath: /bitfusion/bitfusion-client-ubuntu1804_4.0.1-5_amd64.deb/usr/bin/bitfusion
@@ -26,23 +46,3 @@ data:
         OSVersion: centos8
         BinaryPath: /bitfusion/bitfusion-client-centos8-4.0.1-5.x86_64.rpm/usr/bin/bitfusion
         EnvVariable: /bitfusion/bitfusion-client-centos8-4.0.1-5.x86_64.rpm/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/
-
-      - BitfusionVersion: "350"
-        OSVersion: ubuntu18
-        BinaryPath: /bitfusion/bitfusion-client-ubuntu1804_3.5.0-5_amd64.deb/usr/bin/bitfusion
-        EnvVariable: /bitfusion/bitfusion-client-ubuntu1804_3.5.0-5_amd64.deb/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/
-
-      - BitfusionVersion: "350"
-        OSVersion: ubuntu20
-        BinaryPath: /bitfusion/bitfusion-client-ubuntu2004_3.5.0-5_amd64.deb/usr/bin/bitfusion
-        EnvVariable: /bitfusion/bitfusion-client-ubuntu2004_3.5.0-5_amd64.deb/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/
-
-      - BitfusionVersion: "350"
-        OSVersion: centos7
-        BinaryPath: /bitfusion/bitfusion-client-centos7-3.5.0-5.x86_64.rpm/usr/bin/bitfusion
-        EnvVariable: /bitfusion/bitfusion-client-centos7-3.5.0-5.x86_64.rpm/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/
-
-      - BitfusionVersion: "350"
-        OSVersion: centos8
-        BinaryPath: /bitfusion/bitfusion-client-centos8-3.5.0-5.x86_64.rpm/usr/bin/bitfusion
-        EnvVariable: /bitfusion/bitfusion-client-centos8-3.5.0-5.x86_64.rpm/opt/bitfusion/lib/x86_64-linux-gnu/bitfusion/lib/
