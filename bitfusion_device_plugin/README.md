@@ -1,4 +1,4 @@
-# Bitfusion on Kubernetes #
+# Bitfusion on Kubernetes
 
 
 - [Bitfusion on Kubernetes](#bitfusion-on-kubernetes)
@@ -61,7 +61,7 @@ Component 1 and 2 are built into separated docker images.
 bitfusion-device-plugin runs as a DaemonSet  on each worker node where kubelet is running.  
 bitfusion-webhook runs as a Deployment on the Kubernetes master node.  
 
-## 2. Prerequisites 
+## 2. Prerequisites
 -  Ubuntu Linux as the operating system of the installation machine 
 -  OpenSSL needs to be installed on Ubuntu
 -  Kubernetes 1.16+
@@ -161,7 +161,7 @@ There are two deployment options:
 - Building images from scratch  
 
 
-### 3.1. Option 1: Using pre-built images (recommended) 
+### 3.1. Option 1: Using pre-built images (recommended)
 
 Use the following command to clone the source code:  
 
@@ -176,7 +176,7 @@ $ make deploy
 ```
 
 
-### 3.2. Option 2: Building images from scratch 
+### 3.2. Option 2: Building images from scratch
 
 Instead of using the pre-buit images, users can choose to build the images from source. Optionally, after the images are built, they can be pushed to a registry service (either Docker Hub or an internal registry server). 
 
@@ -234,7 +234,7 @@ The next step is to use the following command to deploy the **Bitfusion device p
 $ make deploy
 ```
 
-### 3.3. Verifying the deployment  
+### 3.3. Verifying the deployment
 After the installation is completed either via Option 1 or Option 2, use the following command to see if all components have been started properly in the namespace `bwki`:  
 
 Check to see if the Device Plugin is running:
@@ -298,7 +298,7 @@ If you decide to uninstall the program and clean up all cache files, you should 
 $ make uninstall
 ```
 
-## 4. Using Bitfusion GPU in Kubernetes workload 
+## 4. Using Bitfusion GPU in Kubernetes workload
 
 After completing the installation, users can write a YAML file of Kubernetes to consume the Bitfusion resources. There are three parameters related to Bitfusion resource in a YAML file: 
 
@@ -317,7 +317,7 @@ Below is a sample YAML of Pod which runs a benchmark of Tensorflow. The variable
 
 There are two options to specify the Bitfusion resource which the workload request.
 
-### 4.1. Option 1: Submit the workload with "gpu-percent" parameter ###
+### 4.1. Option 1: Submit the workload with "gpu-percent" parameter
 
 Use bitfusion.io/gpu-amount and bitfusion.io/gpu-percent parameters in YAML file to specify the resource the pod request.
 
@@ -347,12 +347,12 @@ spec:
       volumeMounts:
         - name: code
           mountPath: /benchmark
-    volumes:
-        - name: code
-          # The Benchmarks used for the test came from: https://github.com/tensorflow/benchmarks/tree/tf_benchmark_stage 
-          # Please make sure you have the corresponding content in /home/benchmarks directory on your node
-          hostPath:
-            path: /home/benchmarks
+  volumes:
+      - name: code
+        # The Benchmarks used for the test came from: https://github.com/tensorflow/benchmarks/tree/tf_benchmark_stage 
+        # Please make sure you have the corresponding content in /home/benchmarks directory on your node
+        hostPath:
+          path: /home/benchmarks
 ```
 
 Then apply the yaml with the following command to deploy:
@@ -364,7 +364,7 @@ $ kubectl create -f example/pod.yaml
 
 
 
-### 4.2. Option 2: Submit the workload with "gpu-memory" parameter ###
+### 4.2. Option 2: Submit the workload with "gpu-memory" parameter
 
 Use bitfusion.io/gpu-amount and bitfusion.io/gpu-memory parameters in YAML file to specify the resource the pod request.
 
@@ -393,12 +393,12 @@ spec:
       volumeMounts:
         - name: code
           mountPath: /benchmark
-    volumes:
-        - name: code
-          # The Benchmarks used for the test came from: https://github.com/tensorflow/benchmarks/tree/tf_benchmark_stage 
-          # Please make sure you have the corresponding content in /home/benchmarks directory on your node
-          hostPath:
-            path: /home/benchmarks
+  volumes:
+      - name: code
+        # The Benchmarks used for the test came from: https://github.com/tensorflow/benchmarks/tree/tf_benchmark_stage 
+        # Please make sure you have the corresponding content in /home/benchmarks directory on your node
+        hostPath:
+          path: /home/benchmarks
 ```
 
 Apply the yaml with the following command to deploy:
