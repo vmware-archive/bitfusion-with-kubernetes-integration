@@ -1,5 +1,9 @@
 # Bitfusion with Kubernetes Integration
 
+- bitfusion-with-kubernetes-integration is not required to run Bitfusion with Kubernetes.
+- [Kubernetes integration is included with Bitfusion](https://docs.vmware.com/en/VMware-vSphere-Bitfusion/4.0/Install-Guide/GUID-3E0A4340-8EC0-4DE0-B467-8714725DF901.html#GUID-E65BA25B-3C25-41F3-B901-28B4CE30812D__GUID-8053F952-74C2-4F11-99FE-B78F0EE6B262).
+- bitfusion-with-kubernetes-integration is community supported and is not supported by VMware Tech Support. If you have a problem [open an issue on Github](https://github.com/vmware/bitfusion-with-kubernetes-integration/issues).
+
 This project is a collection of tools for Bitfusion to be used with Kubernetes and Docker. For more information about Bitfusion, visit [vSphere Bitfusion document page](https://docs.vmware.com/en/VMware-vSphere-Bitfusion/index.html). This project contains:
 
 - [Bitfusion device plugin for Kubernetes](./bitfusion_device_plugin)
