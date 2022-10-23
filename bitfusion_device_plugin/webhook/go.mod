@@ -14,3 +14,8 @@ require (
 	k8s.io/client-go v0.19.0
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920 // indirect
 )
+
+replace (
+	github.com/golang/protobuf => github.com/golang/protobuf v1.4.3
+	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.3.0
+)

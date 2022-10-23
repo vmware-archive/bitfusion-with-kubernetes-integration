@@ -9,3 +9,5 @@ require (
 	google.golang.org/grpc v1.27.0
 	k8s.io/kubelet v0.19.4
 )
+
+replace github.com/golang/protobuf => github.com/golang/protobuf v1.4.3
