@@ -11,4 +11,7 @@ require (
 	k8s.io/kubelet v0.19.4
 )
 
-replace github.com/golang/protobuf => github.com/golang/protobuf v1.4.3
+replace (
+	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
+	github.com/golang/protobuf => github.com/golang/protobuf v1.4.3
+)
