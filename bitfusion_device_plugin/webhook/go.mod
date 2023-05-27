@@ -3,6 +3,7 @@ module github.com/vmware/bitfusion-device-plugin
 go 1.14
 
 require (
+        github.com/docker/distribution v2.8.2-beta.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
